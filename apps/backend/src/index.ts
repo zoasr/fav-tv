@@ -8,9 +8,9 @@ import express, {
 	type Response,
 } from "express";
 import { z } from "zod";
-import { auth } from "../auth";
-import { db } from "./db";
-import { entries } from "./db/schema/schema";
+import { auth } from "./auth.js";
+import { db } from "./db/index.js";
+import { entries } from "./db/schema/schema.js";
 
 dotenv.config();
 const app = express();

@@ -13,8 +13,8 @@ A full-stack web application to manage a personal list of favorite movies and TV
 
 ### 1. Clone Repo
 ```bash
-git clone <your-repo-url>
-cd favorite-tv
+git clone https://github.com/zoasr/fav-tv.git
+cd fav-tv
 ```
 
 ### 2. Setup MySQL (on Railway)

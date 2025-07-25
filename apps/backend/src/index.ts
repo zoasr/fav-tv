@@ -131,11 +131,11 @@ const authMiddleware = async (
 
 app.use(
 	cors({
-		origin: [
-			"http://localhost:3000",
-			"https://fav-tv.vercel.app",
-		],
+		origin: ["http://localhost:3000", "https://fav-tv.vercel.app"],
 		credentials: true,
+		methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+		allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
+		optionsSuccessStatus: 200,
 	}),
 );
 
@@ -152,9 +152,9 @@ app.get("/health", (req, res) => {
 // Debug endpoint to test CORS
 app.get("/debug/cors", (req, res) => {
 	res.json({
-		origin: req.get('Origin'),
+		origin: req.get("Origin"),
 		headers: req.headers,
-		cookies: req.get('Cookie'),
+		cookies: req.get("Cookie"),
 		timestamp: new Date().toISOString(),
 	});
 });

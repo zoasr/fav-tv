@@ -12,7 +12,6 @@ import { auth } from "./auth.js";
 import { db } from "./db/index.js";
 import { entries } from "./db/schema/schema.js";
 
-// Custom error classes for better error handling
 class AuthError extends Error {
 	constructor(
 		message: string,
@@ -30,7 +29,6 @@ class UnauthorizedError extends AuthError {
 	}
 }
 
-// Standardized error response format
 interface ErrorResponse {
 	error: string;
 	code: string;
@@ -42,7 +40,6 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3241;
 
-// Extend the Express Request type to include user information
 declare global {
 	namespace Express {
 		interface Request {
@@ -51,7 +48,6 @@ declare global {
 	}
 }
 
-// Helper function to create standardized error responses
 const createErrorResponse = (
 	message: string,
 	code: string,
@@ -63,14 +59,12 @@ const createErrorResponse = (
 	timestamp: new Date().toISOString(),
 });
 
-// Enhanced auth middleware with better error handling
 const authMiddleware = async (
 	req: Request,
 	res: Response,
 	next: NextFunction,
 ) => {
 	try {
-		// Check for authorization header or cookies
 		const headers = fromNodeHeaders(req.headers);
 
 		if (!headers.get("cookie") && !headers.get("authorization")) {
@@ -82,7 +76,6 @@ const authMiddleware = async (
 			return res.status(401).json(errorResponse);
 		}
 
-		// Attempt to get session from better-auth
 		const session = await auth.api.getSession({ headers });
 
 		if (!session) {
@@ -103,13 +96,11 @@ const authMiddleware = async (
 			return res.status(401).json(errorResponse);
 		}
 
-		// Attach user info to request
 		req.user = { id: session.user.id };
 		next();
 	} catch (error) {
 		console.error("Authentication error:", error);
 
-		// Handle specific authentication errors
 		if (error instanceof UnauthorizedError || error instanceof AuthError) {
 			const errorResponse = createErrorResponse(
 				error.message,
@@ -119,7 +110,6 @@ const authMiddleware = async (
 			return res.status(401).json(errorResponse);
 		}
 
-		// Generic server error for unexpected issues
 		const errorResponse = createErrorResponse(
 			"Internal server error during authentication",
 			"AUTH_SERVER_ERROR",
@@ -139,7 +129,6 @@ app.use(
 	}),
 );
 
-// Health check endpoint
 app.get("/health", (req, res) => {
 	res.json({
 		status: "healthy",
@@ -149,7 +138,6 @@ app.get("/health", (req, res) => {
 	});
 });
 
-// Debug endpoint to test CORS
 app.get("/debug/cors", (req, res) => {
 	res.json({
 		origin: req.get("Origin"),
@@ -159,7 +147,6 @@ app.get("/debug/cors", (req, res) => {
 	});
 });
 
-// Debug endpoint to test cookies and session
 app.get("/debug/session", async (req, res) => {
 	try {
 		const headers = fromNodeHeaders(req.headers);
@@ -190,11 +177,43 @@ app.get("/debug/session", async (req, res) => {
 	}
 });
 
-// Mount auth routes
+app.use("/api/auth", (req, res, next) => {
+	const originalSetHeader = res.setHeader.bind(res);
+
+	res.setHeader = (name, value) => {
+		if (name.toLowerCase() === "set-cookie") {
+			if (Array.isArray(value)) {
+				value = value.map((cookie) => {
+					if (cookie.includes("better-auth.session_data")) {
+						return (
+							cookie
+								.replace(/SameSite=Lax/i, "SameSite=None")
+								.replace(/SameSite=Strict/i, "SameSite=None") +
+							(cookie.includes("Secure") ? "" : "; Secure")
+						);
+					}
+					return cookie;
+				});
+			} else if (
+				typeof value === "string" &&
+				value.includes("better-auth.session_data")
+			) {
+				value =
+					value
+						.replace(/SameSite=Lax/i, "SameSite=None")
+						.replace(/SameSite=Strict/i, "SameSite=None") +
+					(value.includes("Secure") ? "" : "; Secure");
+			}
+		}
+		return originalSetHeader(name, value);
+	};
+
+	next();
+});
+
 app.all("/api/auth/*splat", toNodeHandler(auth));
 app.use(express.json());
 
-// Entry validation schema
 const EntrySchema = z.object({
 	title: z.string().min(1, "Title is required"),
 	type: z.enum(["Movie", "TV Show"]),
@@ -205,13 +224,10 @@ const EntrySchema = z.object({
 	yearTime: z.string().min(1, "Year/Time is required"),
 });
 
-// Apply auth middleware to all entry routes
 app.use("/entries", authMiddleware);
 
-// Get user's entries with pagination
 app.get("/entries", async (req, res) => {
 	try {
-		// Additional auth check (redundant but explicit)
 		if (!req.user?.id) {
 			const errorResponse = createErrorResponse(
 				"User not authenticated",
@@ -247,7 +263,6 @@ app.get("/entries", async (req, res) => {
 	} catch (error) {
 		console.error("Error fetching entries:", error);
 
-		// Check if it's an auth-related error
 		if (error instanceof UnauthorizedError || error instanceof AuthError) {
 			const errorResponse = createErrorResponse(
 				error.message,
@@ -266,10 +281,8 @@ app.get("/entries", async (req, res) => {
 	}
 });
 
-// Create a new entry
 app.post("/entries", async (req, res) => {
 	try {
-		// Additional auth check
 		if (!req.user?.id) {
 			const errorResponse = createErrorResponse(
 				"User not authenticated",
@@ -303,7 +316,6 @@ app.post("/entries", async (req, res) => {
 	} catch (error) {
 		console.error("Error creating entry:", error);
 
-		// Check if it's an auth-related error
 		if (error instanceof UnauthorizedError || error instanceof AuthError) {
 			const errorResponse = createErrorResponse(
 				error.message,
@@ -322,10 +334,8 @@ app.post("/entries", async (req, res) => {
 	}
 });
 
-// Update an existing entry
 app.put("/entries/:id", async (req, res) => {
 	try {
-		// Additional auth check
 		if (!req.user?.id) {
 			const errorResponse = createErrorResponse(
 				"User not authenticated",
@@ -356,7 +366,6 @@ app.put("/entries/:id", async (req, res) => {
 			});
 		}
 
-		// First verify the entry exists and belongs to the user
 		const [existingEntry] = await db
 			.select()
 			.from(entries)
@@ -383,7 +392,6 @@ app.put("/entries/:id", async (req, res) => {
 	} catch (error) {
 		console.error("Error updating entry:", error);
 
-		// Check if it's an auth-related error
 		if (error instanceof UnauthorizedError || error instanceof AuthError) {
 			const errorResponse = createErrorResponse(
 				error.message,
@@ -402,10 +410,8 @@ app.put("/entries/:id", async (req, res) => {
 	}
 });
 
-// Delete an entry
 app.delete("/entries/:id", async (req, res) => {
 	try {
-		// Additional auth check
 		if (!req.user?.id) {
 			const errorResponse = createErrorResponse(
 				"User not authenticated",
@@ -425,7 +431,6 @@ app.delete("/entries/:id", async (req, res) => {
 			return res.status(400).json(errorResponse);
 		}
 
-		// First verify the entry exists and belongs to the user
 		const [existingEntry] = await db
 			.select()
 			.from(entries)
@@ -449,7 +454,6 @@ app.delete("/entries/:id", async (req, res) => {
 	} catch (error) {
 		console.error("Error deleting entry:", error);
 
-		// Check if it's an auth-related error
 		if (error instanceof UnauthorizedError || error instanceof AuthError) {
 			const errorResponse = createErrorResponse(
 				error.message,

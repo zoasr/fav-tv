@@ -12,6 +12,32 @@ import { auth } from "./auth.js";
 import { db } from "./db/index.js";
 import { entries } from "./db/schema/schema.js";
 
+// Custom error classes for better error handling
+class AuthError extends Error {
+	constructor(
+		message: string,
+		public code: string = "AUTH_ERROR",
+	) {
+		super(message);
+		this.name = "AuthError";
+	}
+}
+
+class UnauthorizedError extends AuthError {
+	constructor(message: string = "Unauthorized access") {
+		super(message, "UNAUTHORIZED");
+		this.name = "UnauthorizedError";
+	}
+}
+
+// Standardized error response format
+interface ErrorResponse {
+	error: string;
+	code: string;
+	message: string;
+	timestamp: string;
+}
+
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -25,25 +51,81 @@ declare global {
 	}
 }
 
+// Helper function to create standardized error responses
+const createErrorResponse = (
+	message: string,
+	code: string,
+	error?: string,
+): ErrorResponse => ({
+	error: error || message,
+	code,
+	message,
+	timestamp: new Date().toISOString(),
+});
+
+// Enhanced auth middleware with better error handling
 const authMiddleware = async (
 	req: Request,
 	res: Response,
 	next: NextFunction,
 ) => {
 	try {
-		const session = await auth.api.getSession({
-			headers: fromNodeHeaders(req.headers),
-		});
-		if (!session) {
-			return res.status(401).json({ error: "Unauthorized - No session found" });
+		// Check for authorization header or cookies
+		const headers = fromNodeHeaders(req.headers);
+
+		if (!headers.get("cookie") && !headers.get("authorization")) {
+			const errorResponse = createErrorResponse(
+				"No authentication credentials provided",
+				"MISSING_AUTH_CREDENTIALS",
+				"Authentication required",
+			);
+			return res.status(401).json(errorResponse);
 		}
+
+		// Attempt to get session from better-auth
+		const session = await auth.api.getSession({ headers });
+
+		if (!session) {
+			const errorResponse = createErrorResponse(
+				"Invalid or expired session",
+				"INVALID_SESSION",
+				"Session expired or invalid",
+			);
+			return res.status(401).json(errorResponse);
+		}
+
+		if (!session.user?.id) {
+			const errorResponse = createErrorResponse(
+				"User information not found in session",
+				"INVALID_USER_SESSION",
+				"Invalid user session",
+			);
+			return res.status(401).json(errorResponse);
+		}
+
+		// Attach user info to request
 		req.user = { id: session.user.id };
 		next();
 	} catch (error) {
 		console.error("Authentication error:", error);
-		res
-			.status(500)
-			.json({ error: "Internal server error during authentication" });
+
+		// Handle specific authentication errors
+		if (error instanceof UnauthorizedError || error instanceof AuthError) {
+			const errorResponse = createErrorResponse(
+				error.message,
+				error.code,
+				"Authentication failed",
+			);
+			return res.status(401).json(errorResponse);
+		}
+
+		// Generic server error for unexpected issues
+		const errorResponse = createErrorResponse(
+			"Internal server error during authentication",
+			"AUTH_SERVER_ERROR",
+			"Authentication service unavailable",
+		);
+		res.status(500).json(errorResponse);
 	}
 };
 
@@ -81,6 +163,16 @@ app.use("/entries", authMiddleware);
 // Get user's entries with pagination
 app.get("/entries", async (req, res) => {
 	try {
+		// Additional auth check (redundant but explicit)
+		if (!req.user?.id) {
+			const errorResponse = createErrorResponse(
+				"User not authenticated",
+				"USER_NOT_AUTHENTICATED",
+				"Authentication required to access entries",
+			);
+			return res.status(401).json(errorResponse);
+		}
+
 		const cursor = parseInt(req.query.cursor as string) || Date.now();
 		const limit = 20;
 
@@ -106,19 +198,47 @@ app.get("/entries", async (req, res) => {
 		});
 	} catch (error) {
 		console.error("Error fetching entries:", error);
-		res.status(500).json({ error: "Failed to fetch entries" });
+
+		// Check if it's an auth-related error
+		if (error instanceof UnauthorizedError || error instanceof AuthError) {
+			const errorResponse = createErrorResponse(
+				error.message,
+				error.code,
+				"Authentication failed while fetching entries",
+			);
+			return res.status(401).json(errorResponse);
+		}
+
+		const errorResponse = createErrorResponse(
+			"Failed to fetch entries",
+			"FETCH_ENTRIES_ERROR",
+			"Internal server error while fetching entries",
+		);
+		res.status(500).json(errorResponse);
 	}
 });
 
 // Create a new entry
 app.post("/entries", async (req, res) => {
 	try {
-		console.log(req.body);
+		// Additional auth check
+		if (!req.user?.id) {
+			const errorResponse = createErrorResponse(
+				"User not authenticated",
+				"USER_NOT_AUTHENTICATED",
+				"Authentication required to create entries",
+			);
+			return res.status(401).json(errorResponse);
+		}
+
 		const parsed = EntrySchema.safeParse(req.body);
 		if (!parsed.success) {
 			return res.status(400).json({
 				error: "Validation failed",
+				code: "VALIDATION_ERROR",
+				message: "Request data validation failed",
 				details: parsed.error.format(),
+				timestamp: new Date().toISOString(),
 			});
 		}
 
@@ -134,23 +254,57 @@ app.post("/entries", async (req, res) => {
 		});
 	} catch (error) {
 		console.error("Error creating entry:", error);
-		res.status(500).json({ error: "Failed to create entry" });
+
+		// Check if it's an auth-related error
+		if (error instanceof UnauthorizedError || error instanceof AuthError) {
+			const errorResponse = createErrorResponse(
+				error.message,
+				error.code,
+				"Authentication failed while creating entry",
+			);
+			return res.status(401).json(errorResponse);
+		}
+
+		const errorResponse = createErrorResponse(
+			"Failed to create entry",
+			"CREATE_ENTRY_ERROR",
+			"Internal server error while creating entry",
+		);
+		res.status(500).json(errorResponse);
 	}
 });
 
 // Update an existing entry
 app.put("/entries/:id", async (req, res) => {
 	try {
+		// Additional auth check
+		if (!req.user?.id) {
+			const errorResponse = createErrorResponse(
+				"User not authenticated",
+				"USER_NOT_AUTHENTICATED",
+				"Authentication required to update entries",
+			);
+			return res.status(401).json(errorResponse);
+		}
+
 		const id = parseInt(req.params.id);
 		if (Number.isNaN(id)) {
-			return res.status(400).json({ error: "Invalid entry ID" });
+			const errorResponse = createErrorResponse(
+				"Invalid entry ID format",
+				"INVALID_ENTRY_ID",
+				"Entry ID must be a valid number",
+			);
+			return res.status(400).json(errorResponse);
 		}
 
 		const parsed = EntrySchema.safeParse(req.body);
 		if (!parsed.success) {
 			return res.status(400).json({
 				error: "Validation failed",
-				details: parsed.error,
+				code: "VALIDATION_ERROR",
+				message: "Request data validation failed",
+				details: parsed.error.format(),
+				timestamp: new Date().toISOString(),
 			});
 		}
 
@@ -162,9 +316,12 @@ app.put("/entries/:id", async (req, res) => {
 			.limit(1);
 
 		if (!existingEntry) {
-			return res
-				.status(404)
-				.json({ error: "Entry not found or access denied" });
+			const errorResponse = createErrorResponse(
+				"Entry not found or access denied",
+				"ENTRY_NOT_FOUND_OR_UNAUTHORIZED",
+				"The requested entry does not exist or you don't have permission to access it",
+			);
+			return res.status(404).json(errorResponse);
 		}
 
 		await db
@@ -177,16 +334,47 @@ app.put("/entries/:id", async (req, res) => {
 		});
 	} catch (error) {
 		console.error("Error updating entry:", error);
-		res.status(500).json({ error: "Failed to update entry" });
+
+		// Check if it's an auth-related error
+		if (error instanceof UnauthorizedError || error instanceof AuthError) {
+			const errorResponse = createErrorResponse(
+				error.message,
+				error.code,
+				"Authentication failed while updating entry",
+			);
+			return res.status(401).json(errorResponse);
+		}
+
+		const errorResponse = createErrorResponse(
+			"Failed to update entry",
+			"UPDATE_ENTRY_ERROR",
+			"Internal server error while updating entry",
+		);
+		res.status(500).json(errorResponse);
 	}
 });
 
 // Delete an entry
 app.delete("/entries/:id", async (req, res) => {
 	try {
+		// Additional auth check
+		if (!req.user?.id) {
+			const errorResponse = createErrorResponse(
+				"User not authenticated",
+				"USER_NOT_AUTHENTICATED",
+				"Authentication required to delete entries",
+			);
+			return res.status(401).json(errorResponse);
+		}
+
 		const id = parseInt(req.params.id);
 		if (Number.isNaN(id)) {
-			return res.status(400).json({ error: "Invalid entry ID" });
+			const errorResponse = createErrorResponse(
+				"Invalid entry ID format",
+				"INVALID_ENTRY_ID",
+				"Entry ID must be a valid number",
+			);
+			return res.status(400).json(errorResponse);
 		}
 
 		// First verify the entry exists and belongs to the user
@@ -197,9 +385,12 @@ app.delete("/entries/:id", async (req, res) => {
 			.limit(1);
 
 		if (!existingEntry) {
-			return res
-				.status(404)
-				.json({ error: "Entry not found or access denied" });
+			const errorResponse = createErrorResponse(
+				"Entry not found or access denied",
+				"ENTRY_NOT_FOUND_OR_UNAUTHORIZED",
+				"The requested entry does not exist or you don't have permission to access it",
+			);
+			return res.status(404).json(errorResponse);
 		}
 
 		await db
@@ -209,7 +400,23 @@ app.delete("/entries/:id", async (req, res) => {
 		res.status(204).send();
 	} catch (error) {
 		console.error("Error deleting entry:", error);
-		res.status(500).json({ error: "Failed to delete entry" });
+
+		// Check if it's an auth-related error
+		if (error instanceof UnauthorizedError || error instanceof AuthError) {
+			const errorResponse = createErrorResponse(
+				error.message,
+				error.code,
+				"Authentication failed while deleting entry",
+			);
+			return res.status(401).json(errorResponse);
+		}
+
+		const errorResponse = createErrorResponse(
+			"Failed to delete entry",
+			"DELETE_ENTRY_ERROR",
+			"Internal server error while deleting entry",
+		);
+		res.status(500).json(errorResponse);
 	}
 });
 

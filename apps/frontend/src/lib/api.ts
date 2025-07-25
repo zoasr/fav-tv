@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getHeaders } from "@tanstack/react-start/server";
 import { authClient } from "~/auth/auth-client";
+import { session } from "./../../../backend/src/db/schema/auth-schema";
 
 export interface SignUpData {
 	name: string;
@@ -46,11 +47,13 @@ async function getAuthHeaders() {
 }
 
 export const getSession = createServerFn().handler(async () => {
-	return await authClient.getSession({
+	const session = await authClient.getSession({
 		fetchOptions: {
 			headers: await getAuthHeaders(),
 		},
 	});
+	console.log(session);
+	return session;
 });
 
 export const signUp = createServerFn({ method: "POST" })

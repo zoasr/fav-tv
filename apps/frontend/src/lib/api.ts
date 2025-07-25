@@ -52,7 +52,7 @@ export const getSession = createServerFn().handler(async () => {
 			headers: await getAuthHeaders(),
 		},
 	});
-	console.log(session);
+	console.log({ session, headers: await getAuthHeaders() });
 	return session;
 });
 

@@ -49,7 +49,12 @@ const authMiddleware = async (
 
 app.use(
 	cors({
-		origin: ["http://localhost:3000", "http://localhost:3000/"],
+		origin: [
+			"http://localhost:3000",
+			"http://localhost:3000/",
+			"https://fav-tv.vercel.app/",
+			"https://fav-tv.vercel.app",
+		],
 		methods: ["GET", "POST", "PUT", "DELETE"],
 		credentials: true,
 	}),

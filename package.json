@@ -8,6 +8,7 @@
     "build:frontend": "turbo run build --filter=frontend",
     "build:backend": "turbo run build --filter=backend",
     "start:backend": "turbo run start --filter=backend",
+    "migrate:backend": "turbo run db:migrate --filter=backend",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types"
   },

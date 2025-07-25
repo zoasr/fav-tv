@@ -40,7 +40,7 @@ interface ErrorResponse {
 
 dotenv.config();
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3241;
 
 // Extend the Express Request type to include user information
 declare global {
@@ -135,12 +135,29 @@ app.use(
 			"http://localhost:3000",
 			"https://fav-tv.vercel.app",
 		],
-		methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-		allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
 		credentials: true,
-		optionsSuccessStatus: 200,
 	}),
 );
+
+// Health check endpoint
+app.get("/health", (req, res) => {
+	res.json({
+		status: "healthy",
+		timestamp: new Date().toISOString(),
+		port: PORT,
+		environment: process.env.NODE_ENV || "development",
+	});
+});
+
+// Debug endpoint to test CORS
+app.get("/debug/cors", (req, res) => {
+	res.json({
+		origin: req.get('Origin'),
+		headers: req.headers,
+		cookies: req.get('Cookie'),
+		timestamp: new Date().toISOString(),
+	});
+});
 
 // Mount auth routes
 app.all("/api/auth/*splat", toNodeHandler(auth));

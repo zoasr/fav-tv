@@ -159,6 +159,36 @@ app.get("/debug/cors", (req, res) => {
 	});
 });
 
+// Debug endpoint to test cookies and session
+app.get("/debug/session", async (req, res) => {
+	try {
+		const headers = fromNodeHeaders(req.headers);
+		const session = await auth.api.getSession({ headers });
+
+		res.json({
+			cookieHeader: req.get("Cookie"),
+			origin: req.get("Origin"),
+			session: session
+				? {
+						userId: session.user?.id,
+						email: session.user?.email,
+						sessionId: session.session?.id,
+						expiresAt: session.session?.expiresAt,
+					}
+				: null,
+			timestamp: new Date().toISOString(),
+			environment: process.env.NODE_ENV || "development",
+		});
+	} catch (error) {
+		res.json({
+			error: error.message,
+			cookieHeader: req.get("Cookie"),
+			origin: req.get("Origin"),
+			timestamp: new Date().toISOString(),
+		});
+	}
+});
+
 // Mount auth routes
 app.all("/api/auth/*splat", toNodeHandler(auth));
 app.use(express.json());

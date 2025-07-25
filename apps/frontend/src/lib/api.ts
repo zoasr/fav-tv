@@ -37,7 +37,7 @@ async function getAuthHeaders() {
 	console.log(incomingHeaders);
 	const headers = new Headers();
 
-	if (incomingHeaders.cookie) {
+	if (incomingHeaders.Cookie || incomingHeaders.cookie) {
 		headers.set("cookie", incomingHeaders.cookie as string);
 	}
 

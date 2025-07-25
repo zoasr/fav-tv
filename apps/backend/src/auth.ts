@@ -8,6 +8,8 @@ import {
 	verification,
 } from "./db/schema/auth-schema.js";
 
+const isProduction = process.env.NODE_ENV === "production";
+
 export const auth = betterAuth({
 	database: drizzleAdapter(db, {
 		provider: "mysql",
@@ -33,16 +35,25 @@ export const auth = betterAuth({
 	},
 	advanced: {
 		defaultCookieAttributes: {
-			sameSite: "none",
-			secure: true,
-			partitioned: true,
+			sameSite: isProduction ? "None" : "Lax",
+			secure: isProduction,
+			httpOnly: true,
+			maxAge: 60 * 60 * 24 * 7, // 7 days
+			path: "/",
+			// Add partitioned only in production for cross-origin
+			...(isProduction && { partitioned: true }),
 		},
 		cookies: {
 			sessionToken: {
+				name: "better-auth.session-token",
 				attributes: {
-					sameSite: "none",
-					secure: true,
-					partitioned: true,
+					sameSite: isProduction ? "None" : "Lax",
+					secure: isProduction,
+					httpOnly: true,
+					maxAge: 60 * 60 * 24 * 7, // 7 days
+					path: "/",
+					// Add partitioned only in production for cross-origin
+					...(isProduction && { partitioned: true }),
 				},
 			},
 		},

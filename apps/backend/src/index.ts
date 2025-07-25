@@ -181,6 +181,7 @@ app.get("/debug/session", async (req, res) => {
 		});
 	} catch (error) {
 		res.json({
+			// @ts-expect-error
 			error: error.message,
 			cookieHeader: req.get("Cookie"),
 			origin: req.get("Origin"),

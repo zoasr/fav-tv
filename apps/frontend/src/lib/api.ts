@@ -46,7 +46,6 @@ async function getAuthHeaders() {
 }
 
 export const getSession = createServerFn().handler(async () => {
-	console.log(getHeaders());
 	return await authClient.getSession({
 		fetchOptions: {
 			headers: await getAuthHeaders(),
@@ -92,7 +91,9 @@ export const getEntries = createServerFn()
 			});
 
 			if (!response.ok) {
-				throw new Error("Failed to fetch entries");
+				throw new Error(
+					`Failed to fetch entries: ${response.status} ${response.statusText}`,
+				);
 			}
 
 			return response.json();
@@ -120,7 +121,6 @@ export const updateEntry = createServerFn({ method: "POST" })
 	.validator((data: { id: number; entry: Entry }) => data)
 	.handler(async ({ data }): Promise<Entry> => {
 		const { id, entry } = data;
-		console.log(data);
 		const response = await fetch(`${API_BASE_URL}/entries/${id}`, {
 			method: "PUT",
 			headers: await getAuthHeaders(),

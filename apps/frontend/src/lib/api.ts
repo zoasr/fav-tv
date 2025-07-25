@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getHeaders } from "@tanstack/react-start/server";
 import { authClient } from "~/auth/auth-client";
-import { session } from "./../../../backend/src/db/schema/auth-schema";
 
 export interface SignUpData {
 	name: string;
@@ -35,6 +34,7 @@ interface PaginatedResponse<T> {
 
 async function getAuthHeaders() {
 	const incomingHeaders = getHeaders();
+	console.log(incomingHeaders);
 	const headers = new Headers();
 
 	if (incomingHeaders.cookie) {

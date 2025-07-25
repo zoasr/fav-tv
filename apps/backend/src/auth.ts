@@ -18,7 +18,11 @@ export const auth = betterAuth({
 			verification,
 		},
 	}),
-	trustedOrigins: ["http://localhost:3000", "https://fav-tv.vercel.app/"],
+	trustedOrigins: [
+		"http://localhost:3000",
+		"https://fav-tv.vercel.app/",
+		"https://fav-tv.vercel.app",
+	],
 	emailAndPassword: {
 		enabled: true,
 		//...

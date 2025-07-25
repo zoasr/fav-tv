@@ -49,10 +49,13 @@ export function EntriesList() {
 		},
 	});
 
-	const { data, isLoading, isError } = useQuery({
+	const { data, isLoading, isError, error } = useQuery({
 		queryKey: ["entries", cursor],
 		queryFn: () => getEntries({ data: cursor }),
+		retry: false,
 	});
+
+	console.log({ data, isLoading, isError });
 
 	const handleUpdate = async (formData: Omit<Entry, "id">) => {
 		if (editingEntry) {
@@ -64,19 +67,11 @@ export function EntriesList() {
 		return (
 			<div className="rounded-md bg-red-50 p-4">
 				<h3 className="text-sm font-medium text-red-800">
-					Error loading entries
+					Error loading entries: {error.message}
 				</h3>
 				<Button onClick={() => router.invalidate()} className="mt-4">
 					Retry
 				</Button>
-			</div>
-		);
-	}
-
-	if (isLoading) {
-		return (
-			<div className="flex justify-center py-4">
-				<div className="h-8 w-8 animate-spin rounded-full border-b-2 border-indigo-600"></div>
 			</div>
 		);
 	}
@@ -88,6 +83,13 @@ export function EntriesList() {
 				<p className="mt-1 text-sm text-gray-500">
 					Get started by adding a new movie or TV show.
 				</p>
+			</div>
+		);
+	}
+	if (isLoading) {
+		return (
+			<div className="flex justify-center py-4">
+				<div className="h-8 w-8 animate-spin rounded-full border-b-2 border-indigo-600"></div>
 			</div>
 		);
 	}

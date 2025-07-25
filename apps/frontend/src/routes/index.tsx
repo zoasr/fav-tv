@@ -1,14 +1,16 @@
-import { createFileRoute, useLoaderData } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { EntriesPage } from "~/components/entries/entries-page";
 
 export const Route = createFileRoute("/")({
-	component: RouteComponent,
+	component: HomeRoute,
 });
 
-function RouteComponent() {
-	const user = useLoaderData({ from: "__root__" });
+function HomeRoute() {
 	return (
-		<main className="container mx-auto p-4">
-			<pre>{JSON.stringify(user, null, 2)}</pre>
-		</main>
+		<div className="min-h-screen bg-gray-50">
+			<main className="container mx-auto px-4 py-8 sm:px-6 lg:px-8 max-w-[1024px]">
+				<EntriesPage />
+			</main>
+		</div>
 	);
 }

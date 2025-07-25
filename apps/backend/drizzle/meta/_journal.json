@@ -15,6 +15,13 @@
       "when": 1753389337390,
       "tag": "0001_bored_skin",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1753444184769,
+      "tag": "0002_amusing_nightmare",
+      "breakpoints": true
     }
   ]
 }

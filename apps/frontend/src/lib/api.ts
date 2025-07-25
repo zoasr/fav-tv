@@ -66,6 +66,7 @@ export const signUp = createServerFn({ method: "POST" })
 			email: data.email,
 			password: data.password,
 		});
+		console.log(response);
 
 		return response;
 	});

@@ -2,7 +2,6 @@
 
 import type { QueryClient } from "@tanstack/react-query";
 import {
-	createRootRoute,
 	createRootRouteWithContext,
 	HeadContent,
 	Link,
@@ -93,8 +92,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 								</span>
 								<Button
 									variant="destructive"
-									onClick={() => {
-										authClient.signOut();
+									onClick={async () => {
+										await authClient.signOut();
 										router.invalidate();
 									}}
 								>

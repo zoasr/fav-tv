@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "tsc && node dist/index.js",
-    "dev": "tsx --watch src/index.ts",
+    "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
@@ -26,14 +26,12 @@
     "drizzle-orm": "^0.44.3",
     "express": "^5.1.0",
     "mysql2": "^3.14.2",
-    "ts-node": "^10.9.2",
     "zod": "^4.0.9"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "drizzle-kit": "^0.31.4",
-    "nodemon": "^3.1.10",
     "tsx": "^4.20.3"
   }
 }

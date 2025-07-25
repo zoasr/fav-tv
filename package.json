@@ -6,6 +6,7 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "build:frontend": "turbo run build --filter=frontend",
+    "build:backend": "turbo run build --filter=backend",
     "start:backend": "turbo run start --filter=backend",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types"

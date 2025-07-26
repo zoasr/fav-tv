@@ -10,6 +10,19 @@ import {
 
 const isProduction = process.env.NODE_ENV === "production";
 
+const sessionCookieConfig: {
+	sameSite: "none";
+	secure: boolean;
+	httpOnly: true;
+	path: string;
+} = {
+	sameSite: "none",
+	secure: isProduction,
+	httpOnly: true,
+	path: "/",
+};
+console.log("Session cookie config:", sessionCookieConfig);
+
 export const auth = betterAuth({
 	database: drizzleAdapter(db, {
 		provider: "mysql",
@@ -29,12 +42,7 @@ export const auth = betterAuth({
 		cookies: {
 			sessionToken: {
 				name: "better-auth.session-token",
-				attributes: {
-					sameSite: "None",
-					secure: isProduction,
-					httpOnly: true,
-					path: "/",
-				},
+				attributes: sessionCookieConfig,
 			},
 		},
 	},

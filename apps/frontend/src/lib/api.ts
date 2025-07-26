@@ -146,7 +146,7 @@ export const updateEntry = createServerFn({ method: "POST" })
 	.validator((data: { id: number; entry: Entry }) => data)
 	.handler(async ({ data }): Promise<Entry> => {
 		const { id, entry } = data;
-		const response = await fetch(`${API_BPI_BASE_URL}/entries/${id}`, {
+		const response = await fetch(`${API_BASE_URL}/entries/${id}`, {
 			method: "PUT",
 			credentials: "include",
 			headers: await getAuthHeaders(),

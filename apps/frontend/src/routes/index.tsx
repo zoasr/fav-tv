@@ -18,6 +18,7 @@ function HomeRoute() {
 		data: session,
 		isLoading,
 		isError,
+		refetch,
 	} = useQuery({
 		queryKey: ["session"],
 		queryFn: getSession,
@@ -86,7 +87,10 @@ function HomeRoute() {
 							</p>
 							<button
 								className="px-4 py-2 bg-destructive text-white rounded hover:bg-destructive/90 transition"
-								onClick={() => router.invalidate()}
+								onClick={() => {
+									router.invalidate();
+									refetch();
+								}}
 							>
 								Reload
 							</button>

@@ -13,9 +13,11 @@ import { createEntry, Entry } from "~/lib/api";
 // import { useAuth } from "~/contexts/AuthContext";
 import { EntriesList } from "./entries-list";
 import { EntryForm } from "./entry-form";
+import { Input } from "../ui/input";
 
 export function EntriesPage() {
 	const [isFormOpen, setIsFormOpen] = useState(false);
+	const [search, setSearch] = useState("");
 	const queryClient = useQueryClient();
 
 	const { mutate: createEntryMutate, isPending: isCreating } = useMutation({
@@ -72,8 +74,17 @@ export function EntriesPage() {
 				</div>
 			</div>
 
+			<div className="mt-4">
+				<Input
+					type="text"
+					placeholder="Search by title, director, year, or location..."
+					value={search}
+					onChange={(e) => setSearch(e.target.value)}
+				/>
+			</div>
+
 			<div className="mt-8">
-				<EntriesList />
+				<EntriesList search={search} />
 			</div>
 		</div>
 	);

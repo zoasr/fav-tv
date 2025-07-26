@@ -9,7 +9,8 @@ import {
 	Tv,
 	User,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import type { FC } from "react";
 import { Button } from "~/components/ui/button";
 import {
 	Card,
@@ -27,7 +28,11 @@ import {
 import { deleteEntry, Entry, getEntries, updateEntry } from "~/lib/api";
 import { EntryForm } from "./entry-form";
 
-export function EntriesList() {
+interface EntriesListProps {
+	search?: string;
+}
+
+export const EntriesList: FC<EntriesListProps> = ({ search = "" }) => {
 	const router = useRouter();
 	const queryClient = useQueryClient();
 	const [cursor, setCursor] = useState<number | undefined>();
@@ -94,9 +99,25 @@ export function EntriesList() {
 		);
 	}
 
+	const filteredEntries = useMemo(
+		() =>
+			data?.entries.filter((entry) => {
+				const term = search.toLowerCase();
+				return (
+					entry.title.toLowerCase().includes(term) ||
+					entry.director.toLowerCase().includes(term) ||
+					(entry.yearTime &&
+						entry.yearTime.toLowerCase().includes(term)) ||
+					(entry.location &&
+						entry.location.toLowerCase().includes(term))
+				);
+			}),
+		[data?.entries, search]
+	);
+
 	return (
 		<div className="space-y-4">
-			{data?.entries.map((entry) => (
+			{filteredEntries?.map((entry) => (
 				<Card
 					key={entry.id}
 					className="hover:shadow-lg transition-shadow duration-200 !rounded-md"
@@ -197,4 +218,4 @@ export function EntriesList() {
 			</Dialog>
 		</div>
 	);
-}
+};

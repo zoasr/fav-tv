@@ -63,8 +63,8 @@ export function EntriesList() {
 
 	if (isError) {
 		return (
-			<div className="rounded-md bg-red-50 p-4">
-				<h3 className="text-sm font-medium text-red-800">
+			<div className="rounded-md bg-destructive/10 p-4">
+				<h3 className="text-sm font-medium text-destructive">
 					Error loading entries: {error.message}
 				</h3>
 				<Button onClick={() => router.invalidate()} className="mt-4">
@@ -77,8 +77,10 @@ export function EntriesList() {
 	if (data?.entries.length === 0 && !isLoading) {
 		return (
 			<div className="text-center py-12">
-				<h3 className="mt-2 text-sm font-medium text-gray-900">No entries</h3>
-				<p className="mt-1 text-sm text-gray-500">
+				<h3 className="mt-2 text-sm font-medium text-muted-foreground">
+					No entries
+				</h3>
+				<p className="mt-1 text-sm text-muted-foreground">
 					Get started by adding a new movie or TV show.
 				</p>
 			</div>
@@ -116,16 +118,16 @@ export function EntriesList() {
 							</span>
 						</div>
 					</CardHeader>
-					<CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-gray-700">
+					<CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-muted-foreground">
 						<div className="flex items-center gap-2">
-							<User className="h-4 w-4 text-gray-500" />
+							<User className="h-4 w-4 text-muted-foreground" />
 							<span>
 								<strong>Director:</strong> {entry.director}
 							</span>
 						</div>
 						{entry.yearTime && (
 							<div className="flex items-center gap-2">
-								<Calendar className="h-4 w-4 text-gray-500" />
+								<Calendar className="h-4 w-4 text-muted-foreground" />
 								<span>
 									<strong>Year:</strong> {entry.yearTime}
 								</span>
@@ -133,7 +135,7 @@ export function EntriesList() {
 						)}
 						{entry.budget && (
 							<div className="flex items-center gap-2">
-								<DollarSign className="h-4 w-4 text-gray-500" />
+								<DollarSign className="h-4 w-4 text-muted-foreground" />
 								<span>
 									<strong>Budget:</strong> {entry.budget}
 								</span>
@@ -141,7 +143,7 @@ export function EntriesList() {
 						)}
 						{entry.location && (
 							<div className="flex items-center gap-2">
-								<MapPin className="h-4 w-4 text-gray-500" />
+								<MapPin className="h-4 w-4 text-muted-foreground" />
 								<span>
 									<strong>Location:</strong> {entry.location}
 								</span>
@@ -175,7 +177,10 @@ export function EntriesList() {
 				</Card>
 			))}
 
-			<Dialog open={!!editingEntry} onOpenChange={() => setEditingEntry(null)}>
+			<Dialog
+				open={!!editingEntry}
+				onOpenChange={() => setEditingEntry(null)}
+			>
 				<DialogContent>
 					<DialogHeader>
 						<DialogTitle>Edit Entry</DialogTitle>

@@ -36,8 +36,10 @@ export function EntriesPage() {
 		<div className="space-y-6">
 			<div className="sm:flex sm:items-center">
 				<div className="sm:flex-auto">
-					<h1 className="text-2xl font-semibold text-gray-900">My Favorites</h1>
-					<p className="mt-2 text-sm text-gray-700">
+					<h1 className="text-2xl font-semibold text-foreground">
+						My Favorites
+					</h1>
+					<p className="mt-2 text-sm text-muted-foreground">
 						A list of all your favorite movies and TV shows.
 					</p>
 				</div>

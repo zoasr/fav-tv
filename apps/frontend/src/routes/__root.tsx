@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 
-import type { QueryClient } from "@tanstack/react-query";
+import { useQuery, type QueryClient } from "@tanstack/react-query";
 import {
 	createRootRouteWithContext,
 	HeadContent,
@@ -15,9 +15,12 @@ import { authClient } from "~/auth/auth-client";
 import { DefaultCatchBoundary } from "~/components/DefaultCatchBoundary";
 import { NotFound } from "~/components/NotFound";
 import { Button } from "~/components/ui/button";
-import { getSession } from "~/lib/api";
 import appCss from "~/styles/app.css?url";
 import { seo } from "~/utils/seo";
+
+export const getSession = async () => {
+	return await authClient.getSession();
+};
 
 export const Route = createRootRouteWithContext<{
 	queryClient: QueryClient;
@@ -32,8 +35,7 @@ export const Route = createRootRouteWithContext<{
 				content: "width=device-width, initial-scale=1",
 			},
 			...seo({
-				title:
-					"TanStack Start | Type-Safe, Client-First, Full-Stack React Framework",
+				title: "TanStack Start | Type-Safe, Client-First, Full-Stack React Framework",
 				description: `TanStack Start is a type-safe, client-first, full-stack React framework. `,
 			}),
 		],
@@ -60,10 +62,6 @@ export const Route = createRootRouteWithContext<{
 			{ rel: "icon", href: "/favicon.ico" },
 		],
 	}),
-	loader: async () => {
-		const session = await getSession();
-		return { session };
-	},
 
 	errorComponent: DefaultCatchBoundary,
 	notFoundComponent: () => <NotFound />,
@@ -71,24 +69,39 @@ export const Route = createRootRouteWithContext<{
 });
 
 function RootDocument({ children }: { children: React.ReactNode }) {
-	const { session } = Route.useLoaderData();
+	const {
+		data: session,
+		isLoading,
+		isError,
+	} = useQuery({
+		queryKey: ["session"],
+		queryFn: getSession,
+	});
+	// const { session } = Route.useLoaderData();
 	const router = useRouter();
 	return (
 		<html lang="en">
 			<head>
 				<HeadContent />
 			</head>
-			<body>
+			<body className="dark">
 				<header className="p-2 flex flex-col sm:flex-row gap-8 sm:gap-2 justify-between items-center border-b-2 border-border">
 					<h1 className="text-2xl font-bold">
 						<Link to="/">Favourite movies & TV Shows</Link>
 					</h1>
 					<aside className="flex gap-2 items-center">
-						{session.data ? (
+						{isLoading && (
+							<div className="flex items-center gap-2 animate-pulse">
+								<div className="w-8 h-8 bg-muted-foreground rounded-full" />
+								<span className="h-4 w-24 bg-muted-foreground rounded" />
+							</div>
+						)}
+						{isError && <span>Error</span>}
+						{session ? (
 							<>
 								<span className="font-bold flex items-center gap-2 bg-primary text-primary-foreground p-2 rounded-md shadow-md">
 									<User />
-									{session.data.user.name}
+									{session.data?.user?.name}
 								</span>
 								<Button
 									variant="destructive"
@@ -100,7 +113,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 									Logout
 								</Button>
 							</>
-						) : (
+						) : !isLoading ? (
 							<>
 								<Link to="/sign-in">
 									<Button variant="outline">Sign In</Button>
@@ -109,7 +122,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 									<Button>Sign Up</Button>
 								</Link>
 							</>
-						)}
+						) : null}
 					</aside>
 				</header>
 				{children}

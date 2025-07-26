@@ -119,10 +119,10 @@
 	}
 
 	html {
-		color-scheme: light dark;
+		color-scheme: dark light;
 	}
 
-	* {
+	/* * {
 		@apply border-gray-200 dark:border-gray-800;
 	}
 
@@ -133,5 +133,5 @@
 
 	.using-mouse * {
 		outline: none !important;
-	}
+	} */
 }

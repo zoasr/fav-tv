@@ -46,16 +46,6 @@ async function getAuthHeaders() {
 	return headers;
 }
 
-export const getSession = createServerFn().handler(async () => {
-	const session = await authClient.getSession({
-		fetchOptions: {
-			headers: await getAuthHeaders(),
-		},
-	});
-	console.log({ session, headers: await getAuthHeaders() });
-	return session;
-});
-
 // export const signUp = createServerFn({ method: "POST" })
 // 	.validator((entries: SignUpData) => {
 // 		if (!entries.name || !entries.email || !entries.password) {
@@ -117,12 +107,12 @@ export const getEntries = createServerFn()
 
 			if (!response.ok) {
 				throw new Error(
-					`Failed to fetch entries: ${response.status} ${response.statusText}`,
+					`Failed to fetch entries: ${response.status} ${response.statusText}`
 				);
 			}
 
 			return response.json();
-		},
+		}
 	);
 
 export const createEntry = createServerFn({ method: "POST" })

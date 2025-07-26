@@ -56,23 +56,44 @@ export const getSession = createServerFn().handler(async () => {
 	return session;
 });
 
-export const signUp = createServerFn({ method: "POST" })
-	.validator((entries: SignUpData) => {
-		if (!entries.name || !entries.email || !entries.password) {
-			throw new Error("Missing required fields");
-		}
-		return entries;
-	})
-	.handler(async ({ data }) => {
-		const response = await authClient.signUp.email({
-			name: data.name,
-			email: data.email,
-			password: data.password,
-		});
-		console.log(response);
+// export const signUp = createServerFn({ method: "POST" })
+// 	.validator((entries: SignUpData) => {
+// 		if (!entries.name || !entries.email || !entries.password) {
+// 			throw new Error("Missing required fields");
+// 		}
+// 		return entries;
+// 	})
+// 	.handler(async ({ data }) => {
+// 		const response = await authClient.signUp.email({
+// 			name: data.name,
+// 			email: data.email,
+// 			password: data.password,
+// 		});
+// 		console.log(response);
 
-		return response;
-	});
+// 		return response;
+// 	});
+
+// 	export const signIn = createServerFn({ method: "POST" })
+// 		.validator((entries: SignInData) => {
+// 			if (!entries.email || !entries.password) {
+// 				throw new Error("Missing required fields");
+// 			}
+// 			return entries;
+// 		})
+// 		.handler(async ({ data }) => {
+// 			const response = await authClient.signIn.email({
+// 				fetchOptions: {
+
+// 				}
+// 				email: data.email,
+// 				password: data.password,
+
+// 			});
+// 			console.log(response);
+
+// 			return response;
+// 		});
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -125,8 +146,9 @@ export const updateEntry = createServerFn({ method: "POST" })
 	.validator((data: { id: number; entry: Entry }) => data)
 	.handler(async ({ data }): Promise<Entry> => {
 		const { id, entry } = data;
-		const response = await fetch(`${API_BASE_URL}/entries/${id}`, {
+		const response = await fetch(`${API_BPI_BASE_URL}/entries/${id}`, {
 			method: "PUT",
+			credentials: "include",
 			headers: await getAuthHeaders(),
 			body: JSON.stringify(entry),
 		});

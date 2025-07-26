@@ -38,6 +38,7 @@ interface ErrorResponse {
 
 dotenv.config();
 const app = express();
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3241;
 
 declare global {
@@ -119,15 +120,12 @@ const authMiddleware = async (
 	}
 };
 
-app.use(
-	cors({
-		origin: ["http://localhost:3000", "https://fav-tv.vercel.app"],
-		credentials: true,
-		methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-		allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
-		optionsSuccessStatus: 200,
-	}),
-);
+const corsOptions = {
+	origin: ["http://localhost:3000", "https://fav-tv.vercel.app"],
+	credentials: true,
+};
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 app.get("/health", (req, res) => {
 	res.json({
@@ -147,6 +145,8 @@ app.get("/debug/cors", (req, res) => {
 	});
 });
 
+const isProduction = process.env.NODE_ENV === "production";
+
 app.get("/debug/session", async (req, res) => {
 	try {
 		const headers = fromNodeHeaders(req.headers);
@@ -155,6 +155,8 @@ app.get("/debug/session", async (req, res) => {
 		res.json({
 			cookieHeader: req.get("Cookie"),
 			origin: req.get("Origin"),
+			isProduction,
+			setCookieHeader: res.getHeaders()["set-cookie"],
 			session: session
 				? {
 						userId: session.user?.id,
@@ -177,39 +179,7 @@ app.get("/debug/session", async (req, res) => {
 	}
 });
 
-app.use("/api/auth", (req, res, next) => {
-	const originalSetHeader = res.setHeader.bind(res);
 
-	res.setHeader = (name, value) => {
-		if (name.toLowerCase() === "set-cookie") {
-			if (Array.isArray(value)) {
-				value = value.map((cookie) => {
-					if (cookie.includes("better-auth.session_data")) {
-						return (
-							cookie
-								.replace(/SameSite=Lax/i, "SameSite=None")
-								.replace(/SameSite=Strict/i, "SameSite=None") +
-							(cookie.includes("Secure") ? "" : "; Secure")
-						);
-					}
-					return cookie;
-				});
-			} else if (
-				typeof value === "string" &&
-				value.includes("better-auth.session_data")
-			) {
-				value =
-					value
-						.replace(/SameSite=Lax/i, "SameSite=None")
-						.replace(/SameSite=Strict/i, "SameSite=None") +
-					(value.includes("Secure") ? "" : "; Secure");
-			}
-		}
-		return originalSetHeader(name, value);
-	};
-
-	next();
-});
 
 app.all("/api/auth/*splat", toNodeHandler(auth));
 app.use(express.json());

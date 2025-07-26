@@ -35,8 +35,15 @@ export const Route = createRootRouteWithContext<{
 				content: "width=device-width, initial-scale=1",
 			},
 			...seo({
-				title: "TanStack Start | Type-Safe, Client-First, Full-Stack React Framework",
-				description: `TanStack Start is a type-safe, client-first, full-stack React framework. `,
+				title: "Favorite Movies & TV Shows | Track and Share Your Favorites",
+				description: `Discover, track, and share your favorite movies and TV shows. Create your personal watchlist, rate titles, and connect with fellow fans!`,
+				keywords:
+					"movies, tv shows, favorites, watchlist, reviews, ratings, entertainment, film, series, tracker, social",
+				image: "/android-chrome-512x512.png",
+				canonical: "https://fav-tv.vercel.app/",
+				author: "zoasr",
+				robots: "index, follow",
+				lang: "en",
 			}),
 		],
 		links: [

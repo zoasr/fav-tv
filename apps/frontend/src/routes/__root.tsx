@@ -76,6 +76,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 	} = useQuery({
 		queryKey: ["session"],
 		queryFn: getSession,
+		retry: false,
 	});
 	// const { session } = Route.useLoaderData();
 	const router = useRouter();

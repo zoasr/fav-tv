@@ -65,6 +65,21 @@ export const EntriesList: FC<EntriesListProps> = ({ search = "" }) => {
 			updateMutate({ id: editingEntry.id as number, entry: formData });
 		}
 	};
+	const filteredEntries = useMemo(
+		() =>
+			data?.entries.filter((entry) => {
+				const term = search.toLowerCase();
+				return (
+					entry.title.toLowerCase().includes(term) ||
+					entry.director.toLowerCase().includes(term) ||
+					(entry.yearTime &&
+						entry.yearTime.toLowerCase().includes(term)) ||
+					(entry.location &&
+						entry.location.toLowerCase().includes(term))
+				);
+			}),
+		[data?.entries, search]
+	);
 
 	if (isError) {
 		return (
@@ -98,22 +113,6 @@ export const EntriesList: FC<EntriesListProps> = ({ search = "" }) => {
 			</div>
 		);
 	}
-
-	const filteredEntries = useMemo(
-		() =>
-			data?.entries.filter((entry) => {
-				const term = search.toLowerCase();
-				return (
-					entry.title.toLowerCase().includes(term) ||
-					entry.director.toLowerCase().includes(term) ||
-					(entry.yearTime &&
-						entry.yearTime.toLowerCase().includes(term)) ||
-					(entry.location &&
-						entry.location.toLowerCase().includes(term))
-				);
-			}),
-		[data?.entries, search]
-	);
 
 	return (
 		<div className="space-y-4">

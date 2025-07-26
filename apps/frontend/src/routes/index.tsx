@@ -22,6 +22,7 @@ function HomeRoute() {
 	} = useQuery({
 		queryKey: ["session"],
 		queryFn: getSession,
+		retry: false,
 	});
 	return (
 		<div className="min-h-screen ">

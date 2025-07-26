@@ -38,7 +38,7 @@ interface ErrorResponse {
 
 dotenv.config();
 const app = express();
-app.set('trust proxy', 1);
+app.set("trust proxy", 1);
 const PORT = process.env.PORT || 3241;
 
 declare global {
@@ -125,7 +125,7 @@ const corsOptions = {
 	credentials: true,
 };
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
+// app.options("*", cors(corsOptions));
 
 app.get("/health", (req, res) => {
 	res.json({
@@ -178,8 +178,6 @@ app.get("/debug/session", async (req, res) => {
 		});
 	}
 });
-
-
 
 app.all("/api/auth/*splat", toNodeHandler(auth));
 app.use(express.json());

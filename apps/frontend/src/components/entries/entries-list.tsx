@@ -24,7 +24,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "~/components/ui/dialog";
-import { deleteEntry, type Entry, getEntries, updateEntry } from "~/lib/api";
+import { deleteEntry, Entry, getEntries, updateEntry } from "~/lib/api";
 import { EntryForm } from "./entry-form";
 
 export function EntriesList() {
@@ -34,7 +34,7 @@ export function EntriesList() {
 	const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
 
 	const { mutate: deleteMutate } = useMutation({
-		mutationFn: (id: number) => deleteEntry({ data: id }),
+		mutationFn: (id: number) => deleteEntry(id),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["entries"] });
 		},
@@ -42,7 +42,7 @@ export function EntriesList() {
 
 	const { mutate: updateMutate, isPending: isUpdating } = useMutation({
 		mutationFn: ({ id, entry }: { id: number; entry: Entry }) =>
-			updateEntry({ data: { id, entry } }),
+			updateEntry(id, entry),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["entries"] });
 			setEditingEntry(null);
@@ -51,7 +51,7 @@ export function EntriesList() {
 
 	const { data, isLoading, isError, error } = useQuery({
 		queryKey: ["entries", cursor],
-		queryFn: () => getEntries({ data: cursor }),
+		queryFn: () => getEntries(cursor),
 		retry: false,
 	});
 

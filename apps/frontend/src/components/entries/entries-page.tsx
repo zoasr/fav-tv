@@ -1,4 +1,4 @@
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
@@ -9,7 +9,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "~/components/ui/dialog";
-import { createEntry, type Entry } from "~/lib/api";
+import { createEntry, Entry } from "~/lib/api";
 // import { useAuth } from "~/contexts/AuthContext";
 import { EntriesList } from "./entries-list";
 import { EntryForm } from "./entry-form";
@@ -18,18 +18,24 @@ export function EntriesPage() {
 	const [isFormOpen, setIsFormOpen] = useState(false);
 	const queryClient = useQueryClient();
 
-	const handleFormSubmit = async (data: Omit<Entry, "id" | "userId">) => {
-		try {
-			// The actual API call will be handled by the parent component
-			setIsFormOpen(false);
-
-			await createEntry({ data });
-			// Refresh the entries list
-			// This would be better with a proper state management solution
+	const { mutate: createEntryMutate, isPending: isCreating } = useMutation({
+		mutationFn: (data: Omit<Entry, "id" | "userId">) =>
+			createEntry(data as Entry),
+		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["entries"] });
-		} catch (error) {
-			console.error("Failed to save entry:", error);
-		}
+			setIsFormOpen(false);
+		},
+	});
+
+	const handleFormSubmit = async (
+		data: Omit<Entry, "id" | "userId">
+	): Promise<void> => {
+		await new Promise<void>((resolve) => {
+			createEntryMutate(data, {
+				onSuccess: () => resolve(),
+				// Optionally handle onError if needed
+			});
+		});
 	};
 
 	return (
@@ -58,7 +64,7 @@ export function EntriesPage() {
 								<EntryForm
 									onSubmit={handleFormSubmit}
 									onCancel={() => setIsFormOpen(false)}
-									isSubmitting={false}
+									isSubmitting={isCreating}
 								/>
 							</div>
 						</DialogContent>

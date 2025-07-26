@@ -62,7 +62,6 @@ export const Route = createRootRouteWithContext<{
 			{ rel: "icon", href: "/favicon.ico" },
 		],
 	}),
-
 	errorComponent: DefaultCatchBoundary,
 	notFoundComponent: () => <NotFound />,
 	shellComponent: RootDocument,
@@ -73,6 +72,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 		data: session,
 		isLoading,
 		isError,
+		refetch,
 	} = useQuery({
 		queryKey: ["session"],
 		queryFn: getSession,
@@ -97,7 +97,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 							</div>
 						)}
 						{isError && <span>Error</span>}
-						{session ? (
+						{session?.data?.user ? (
 							<>
 								<span className="font-bold flex items-center gap-2 bg-primary text-primary-foreground p-2 rounded-md shadow-md">
 									<User />
@@ -107,6 +107,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 									variant="destructive"
 									onClick={async () => {
 										await authClient.signOut();
+										refetch();
 										router.invalidate();
 									}}
 								>

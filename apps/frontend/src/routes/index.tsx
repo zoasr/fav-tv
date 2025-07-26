@@ -20,7 +20,9 @@ function HomeRoute() {
 	return (
 		<div className="min-h-screen ">
 			<main className="container mx-auto px-4 py-8 sm:px-6 lg:px-8 max-w-[1024px]">
-				{session ? <EntriesPage /> : <HeroSection />}
+				{isLoading && <div>Loading...</div>}
+				{isError && <div>Error</div>}
+				{session?.data ? <EntriesPage /> : <HeroSection />}
 			</main>
 		</div>
 	);

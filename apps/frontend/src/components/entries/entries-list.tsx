@@ -55,8 +55,6 @@ export function EntriesList() {
 		retry: false,
 	});
 
-	console.log({ data, isLoading, isError });
-
 	const handleUpdate = async (formData: Omit<Entry, "id">) => {
 		if (editingEntry) {
 			updateMutate({ id: editingEntry.id as number, entry: formData });

@@ -1,4 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { authClient } from "~/auth/auth-client";
 import { Button } from "~/components/ui/button";
 import {
 	Card,
@@ -9,23 +11,35 @@ import {
 } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
-import { type SignUpData, signUp } from "~/lib/api";
+import type { SignUpData } from "~/lib/api";
 
 export const Route = createFileRoute("/sign-up")({
 	component: SignUpComponent,
 });
 
 function SignUpComponent() {
+	const [error, setError] = useState<null | string | undefined>(null);
+	const navigate = Route.useNavigate();
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
-		console.log(e.target);
 		const formData = new FormData(e.target as HTMLFormElement);
 		const entries: SignUpData = {
 			name: formData.get("name") as string,
 			email: formData.get("email") as string,
 			password: formData.get("password") as string,
 		};
-		await signUp({ data: entries });
+		const res = await authClient.signUp.email({
+			name: entries.name,
+			email: entries.email,
+			password: entries.password,
+		});
+		if (res.error) {
+			setError(res.error.message);
+		} else {
+			setError(null);
+			navigate({ to: "/" });
+		}
+		// await signUp({ data: entries });
 	};
 	return (
 		<div className="flex justify-center items-center min-h-screen">
@@ -59,6 +73,12 @@ function SignUpComponent() {
 						<Button type="submit" className="w-full">
 							Sign Up
 						</Button>
+						<p
+							className="text-red-500 text-center font-bold grid data-[shown=true]:grid-rows-1 grid-rows-0 transition-all duration-300 ease-in-out"
+							data-shown={!!error}
+						>
+							{error}
+						</p>
 					</form>
 					<div className="mt-4 text-center text-sm">
 						Already have an account?{" "}

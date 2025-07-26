@@ -34,8 +34,6 @@ export const auth = betterAuth({
 					secure: isProduction,
 					httpOnly: true,
 					path: "/",
-					// Add partitioned only in production for cross-origin
-					...(isProduction && { partitioned: true }),
 				},
 			},
 		},

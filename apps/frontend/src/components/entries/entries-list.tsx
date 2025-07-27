@@ -9,8 +9,8 @@ import {
 	Tv,
 	User,
 } from "lucide-react";
-import { useMemo, useState } from "react";
 import type { FC } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "~/components/ui/button";
 import {
 	Card,
@@ -25,7 +25,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "~/components/ui/dialog";
-import { deleteEntry, Entry, getEntries, updateEntry } from "~/lib/api";
+import { deleteEntry, type Entry, getEntries, updateEntry } from "~/lib/api";
 import { EntryForm } from "./entry-form";
 
 interface EntriesListProps {
@@ -72,13 +72,11 @@ export const EntriesList: FC<EntriesListProps> = ({ search = "" }) => {
 				return (
 					entry.title.toLowerCase().includes(term) ||
 					entry.director.toLowerCase().includes(term) ||
-					(entry.yearTime &&
-						entry.yearTime.toLowerCase().includes(term)) ||
-					(entry.location &&
-						entry.location.toLowerCase().includes(term))
+					(entry.yearTime && entry.yearTime.toLowerCase().includes(term)) ||
+					(entry.location && entry.location.toLowerCase().includes(term))
 				);
 			}),
-		[data?.entries, search]
+		[data?.entries, search],
 	);
 
 	if (isError) {
@@ -166,8 +164,7 @@ export const EntriesList: FC<EntriesListProps> = ({ search = "" }) => {
 								<div className="flex items-center gap-2">
 									<MapPin className="h-4 w-4 text-muted-foreground" />
 									<span>
-										<strong>Location:</strong>{" "}
-										{entry.location}
+										<strong>Location:</strong> {entry.location}
 									</span>
 								</div>
 							)}
@@ -175,8 +172,7 @@ export const EntriesList: FC<EntriesListProps> = ({ search = "" }) => {
 								<div className="flex items-center gap-2">
 									<Clock className="h-4 w-4 text-gray-500" />
 									<span>
-										<strong>Duration:</strong>{" "}
-										{entry.duration}
+										<strong>Duration:</strong> {entry.duration}
 									</span>
 								</div>
 							)}
@@ -207,10 +203,7 @@ export const EntriesList: FC<EntriesListProps> = ({ search = "" }) => {
 				</div>
 			)}
 
-			<Dialog
-				open={!!editingEntry}
-				onOpenChange={() => setEditingEntry(null)}
-			>
+			<Dialog open={!!editingEntry} onOpenChange={() => setEditingEntry(null)}>
 				<DialogContent>
 					<DialogHeader>
 						<DialogTitle>Edit Entry</DialogTitle>

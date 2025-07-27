@@ -1,9 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import {
-	createFileRoute,
-	useLoaderData,
-	useRouter,
-} from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { EntriesPage } from "~/components/entries/entries-page";
 import { HeroSection } from "~/components/ui/hero-section";
 import { getSession } from "./__root";
@@ -31,9 +27,9 @@ function HomeRoute() {
 					<div className="flex flex-col gap-6 animate-pulse">
 						<div className="h-8 w-1/3 bg-muted rounded mb-4" />
 						<div className="space-y-4">
-							{Array.from({ length: 3 }).map((_, i) => (
+							{["skeleton-1", "skeleton-2", "skeleton-3"].map((s) => (
 								<div
-									key={i}
+									key={s}
 									className="rounded-md bg-muted/60 p-6 flex flex-col gap-4 shadow"
 								>
 									<div className="flex items-center gap-4">
@@ -59,6 +55,7 @@ function HomeRoute() {
 					<div className="flex flex-col items-center justify-center py-12">
 						<div className="bg-destructive/10 border border-destructive/30 rounded-lg p-8 max-w-md w-full shadow-lg flex flex-col items-center">
 							<svg
+								role="graphics-symbol img"
 								className="w-12 h-12 text-destructive mb-4"
 								fill="none"
 								stroke="currentColor"
@@ -83,11 +80,12 @@ function HomeRoute() {
 								Something went wrong
 							</h2>
 							<p className="text-sm text-destructive/80 mb-4 text-center">
-								We couldn't load your session. Please try
-								refreshing the page or check your connection.
+								We couldn't load your session. Please try refreshing the page or
+								check your connection.
 							</p>
 							<button
 								className="px-4 py-2 bg-destructive text-white rounded hover:bg-destructive/90 transition"
+								type="button"
 								onClick={() => {
 									router.invalidate();
 									refetch();

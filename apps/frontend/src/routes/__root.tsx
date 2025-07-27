@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 
-import { useQuery, type QueryClient } from "@tanstack/react-query";
+import { type QueryClient, useQuery } from "@tanstack/react-query";
 import {
 	createRootRouteWithContext,
 	HeadContent,

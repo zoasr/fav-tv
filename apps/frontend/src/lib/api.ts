@@ -39,7 +39,7 @@ function getJsonHeaders() {
 }
 
 export async function getEntries(
-	cursor?: number
+	cursor?: number,
 ): Promise<PaginatedResponse<Entry>> {
 	const url = new URL("/entries", API_BASE_URL);
 	if (cursor) {
@@ -53,7 +53,7 @@ export async function getEntries(
 
 	if (!response.ok) {
 		throw new Error(
-			`Failed to fetch entries: ${response.status} ${response.statusText}`
+			`Failed to fetch entries: ${response.status} ${response.statusText}`,
 		);
 	}
 

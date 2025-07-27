@@ -18,7 +18,6 @@ export const Route = createFileRoute("/sign-in")({
 });
 
 function SignInComponent() {
-	const router = useRouter();
 	const [error, setError] = useState<null | string | undefined>(null);
 	const navigate = Route.useNavigate();
 	const handleSubmit = async (e: React.FormEvent) => {

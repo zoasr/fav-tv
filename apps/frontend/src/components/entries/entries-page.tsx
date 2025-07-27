@@ -1,5 +1,4 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
 import {
@@ -9,11 +8,11 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "~/components/ui/dialog";
-import { createEntry, Entry } from "~/lib/api";
+import { createEntry, type Entry } from "~/lib/api";
+import { Input } from "../ui/input";
 // import { useAuth } from "~/contexts/AuthContext";
 import { EntriesList } from "./entries-list";
 import { EntryForm } from "./entry-form";
-import { Input } from "../ui/input";
 
 export function EntriesPage() {
 	const [isFormOpen, setIsFormOpen] = useState(false);
@@ -30,7 +29,7 @@ export function EntriesPage() {
 	});
 
 	const handleFormSubmit = async (
-		data: Omit<Entry, "id" | "userId">
+		data: Omit<Entry, "id" | "userId">,
 	): Promise<void> => {
 		await new Promise<void>((resolve) => {
 			createEntryMutate(data, {

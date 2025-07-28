@@ -1,4 +1,5 @@
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Loader } from "lucide-react";
 import { useState } from "react";
 import { authClient } from "~/auth/auth-client";
 import { Button } from "~/components/ui/button";
@@ -19,8 +20,10 @@ export const Route = createFileRoute("/sign-in")({
 
 function SignInComponent() {
 	const [error, setError] = useState<null | string | undefined>(null);
+	const [isSubmitting, setIsSubmitting] = useState(true);
 	const navigate = Route.useNavigate();
 	const handleSubmit = async (e: React.FormEvent) => {
+		setIsSubmitting(true);
 		e.preventDefault();
 		const formData = new FormData(e.target as HTMLFormElement);
 		const entries: SignInData = {
@@ -37,6 +40,7 @@ function SignInComponent() {
 			setError(res.error.message);
 		} else {
 			setError(null);
+			setIsSubmitting(false);
 			navigate({ to: "/" });
 		}
 	};
@@ -69,6 +73,10 @@ function SignInComponent() {
 						</div>
 						<Button type="submit" className="w-full">
 							Sign In
+							<Loader
+								className=" h-4 data-[shown=true]:!w-4 scale-0 !w-0 animate-spin data-[shown=true]:scale-100 transition-all duration-300 ease-in-out origin-center data-[shown=true]:visible data-[shown=false]:invisible"
+								data-shown={isSubmitting}
+							/>
 						</Button>
 						<p
 							className="text-red-500 text-center font-bold grid data-[shown=true]:grid-rows-1 grid-rows-0 transition-all duration-300 ease-in-out"

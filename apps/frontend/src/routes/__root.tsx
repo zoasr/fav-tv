@@ -1,22 +1,26 @@
 /// <reference types="vite/client" />
 
-import { type QueryClient, useQuery } from "@tanstack/react-query";
+import {
+	type QueryClient,
+	useQuery,
+	useQueryClient,
+} from '@tanstack/react-query';
 import {
 	createRootRouteWithContext,
 	HeadContent,
 	Link,
 	Scripts,
 	useRouter,
-} from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
-import { User } from "lucide-react";
-import type * as React from "react";
-import { authClient } from "~/auth/auth-client";
-import { DefaultCatchBoundary } from "~/components/DefaultCatchBoundary";
-import { NotFound } from "~/components/NotFound";
-import { Button } from "~/components/ui/button";
-import appCss from "~/styles/app.css?url";
-import { seo } from "~/utils/seo";
+} from '@tanstack/react-router';
+import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
+import { User } from 'lucide-react';
+import type * as React from 'react';
+import { authClient } from '~/auth/auth-client';
+import { DefaultCatchBoundary } from '~/components/DefaultCatchBoundary';
+import { NotFound } from '~/components/NotFound';
+import { Button } from '~/components/ui/button';
+import appCss from '~/styles/app.css?url';
+import { seo } from '~/utils/seo';
 
 export const getSession = async () => {
 	return await authClient.getSession();
@@ -28,45 +32,45 @@ export const Route = createRootRouteWithContext<{
 	head: () => ({
 		meta: [
 			{
-				charSet: "utf-8",
+				charSet: 'utf-8',
 			},
 			{
-				name: "viewport",
-				content: "width=device-width, initial-scale=1",
+				name: 'viewport',
+				content: 'width=device-width, initial-scale=1',
 			},
 			...seo({
-				title: "Favorite Movies & TV Shows | Track and Share Your Favorites",
+				title: 'Favorite Movies & TV Shows | Track and Share Your Favorites',
 				description: `Discover, track, and share your favorite movies and TV shows. Create your personal watchlist, rate titles, and connect with fellow fans!`,
 				keywords:
-					"movies, tv shows, favorites, watchlist, reviews, ratings, entertainment, film, series, tracker, social",
-				image: "/android-chrome-512x512.png",
-				canonical: "https://fav-tv.vercel.app/",
-				author: "zoasr",
-				robots: "index, follow",
-				lang: "en",
+					'movies, tv shows, favorites, watchlist, reviews, ratings, entertainment, film, series, tracker, social',
+				image: '/android-chrome-512x512.png',
+				canonical: 'https://fav-tv.vercel.app/',
+				author: 'zoasr',
+				robots: 'index, follow',
+				lang: 'en',
 			}),
 		],
 		links: [
-			{ rel: "stylesheet", href: appCss },
+			{ rel: 'stylesheet', href: appCss },
 			{
-				rel: "apple-touch-icon",
-				sizes: "180x180",
-				href: "/apple-touch-icon.png",
+				rel: 'apple-touch-icon',
+				sizes: '180x180',
+				href: '/apple-touch-icon.png',
 			},
 			{
-				rel: "icon",
-				type: "image/png",
-				sizes: "32x32",
-				href: "/favicon-32x32.png",
+				rel: 'icon',
+				type: 'image/png',
+				sizes: '32x32',
+				href: '/favicon-32x32.png',
 			},
 			{
-				rel: "icon",
-				type: "image/png",
-				sizes: "16x16",
-				href: "/favicon-16x16.png",
+				rel: 'icon',
+				type: 'image/png',
+				sizes: '16x16',
+				href: '/favicon-16x16.png',
 			},
-			{ rel: "manifest", href: "/site.webmanifest", color: "#fffff" },
-			{ rel: "icon", href: "/favicon.ico" },
+			{ rel: 'manifest', href: '/site.webmanifest', color: '#fffff' },
+			{ rel: 'icon', href: '/favicon.ico' },
 		],
 	}),
 	errorComponent: DefaultCatchBoundary,
@@ -75,13 +79,14 @@ export const Route = createRootRouteWithContext<{
 });
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+	const queryClient = useQueryClient();
 	const {
 		data: session,
 		isLoading,
 		isError,
 		refetch,
 	} = useQuery({
-		queryKey: ["session"],
+		queryKey: ['session'],
 		queryFn: getSession,
 		retry: false,
 	});
@@ -116,6 +121,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 									onClick={async () => {
 										await authClient.signOut();
 										refetch();
+										queryClient.invalidateQueries({ queryKey: ['entries'] });
 										router.invalidate();
 									}}
 								>

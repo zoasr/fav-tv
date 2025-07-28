@@ -1,4 +1,3 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import { Button } from "~/components/ui/button";
 import {
@@ -9,9 +8,8 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "~/components/ui/dialog";
-import { useCurrentEntry, useEntriesActions } from "~/stores/entries";
+import { useEntriesActions } from "~/stores/entries";
 import { Input } from "../ui/input";
-// import { useAuth } from "~/contexts/AuthContext";
 import { EntriesList } from "./entries-list";
 import { EntryForm } from "./entry-form";
 

@@ -29,6 +29,7 @@ interface EntryFormProps {
 export const EntryForm: FC<EntryFormProps> = ({ handleDialogClose }) => {
 	const currentEntry = useCurrentEntry();
 	const { editEntry, addEntry } = useEntriesActions();
+	const queryClient = useQueryClient();
 	const form = useForm({
 		defaultValues: {
 			title: currentEntry?.title || "",
@@ -48,6 +49,7 @@ export const EntryForm: FC<EntryFormProps> = ({ handleDialogClose }) => {
 				handleDialogClose();
 			} else {
 				await addEntry(value);
+				queryClient.invalidateQueries({ queryKey: ["entries"] });
 				handleDialogClose();
 			}
 		},

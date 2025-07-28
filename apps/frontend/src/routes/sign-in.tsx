@@ -1,34 +1,34 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { Loader } from "lucide-react";
-import { useState } from "react";
-import { authClient } from "~/auth/auth-client";
-import { Button } from "~/components/ui/button";
+import { createFileRoute, Link } from '@tanstack/react-router';
+import { Loader } from 'lucide-react';
+import { useState } from 'react';
+import { authClient } from '~/auth/auth-client';
+import { Button } from '~/components/ui/button';
 import {
 	Card,
 	CardContent,
 	CardDescription,
 	CardHeader,
 	CardTitle,
-} from "~/components/ui/card";
-import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
-import type { SignInData } from "~/lib/api";
+} from '~/components/ui/card';
+import { Input } from '~/components/ui/input';
+import { Label } from '~/components/ui/label';
+import type { SignInData } from '~/lib/api';
 
-export const Route = createFileRoute("/sign-in")({
+export const Route = createFileRoute('/sign-in')({
 	component: SignInComponent,
 });
 
 function SignInComponent() {
 	const [error, setError] = useState<null | string | undefined>(null);
-	const [isSubmitting, setIsSubmitting] = useState(true);
+	const [isSubmitting, setIsSubmitting] = useState(false);
 	const navigate = Route.useNavigate();
 	const handleSubmit = async (e: React.FormEvent) => {
 		setIsSubmitting(true);
 		e.preventDefault();
 		const formData = new FormData(e.target as HTMLFormElement);
 		const entries: SignInData = {
-			email: formData.get("email") as string,
-			password: formData.get("password") as string,
+			email: formData.get('email') as string,
+			password: formData.get('password') as string,
 		};
 		// const res = await signIn({ data: entries });
 		// console.log(res);
@@ -41,7 +41,7 @@ function SignInComponent() {
 		} else {
 			setError(null);
 			setIsSubmitting(false);
-			navigate({ to: "/" });
+			navigate({ to: '/' });
 		}
 	};
 	return (
@@ -86,7 +86,7 @@ function SignInComponent() {
 						</p>
 					</form>
 					<div className="mt-4 text-center text-sm">
-						Don't have an account?{" "}
+						Don't have an account?{' '}
 						<Link to="/sign-up" className="underline">
 							Sign up
 						</Link>

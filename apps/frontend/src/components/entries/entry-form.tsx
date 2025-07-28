@@ -1,4 +1,7 @@
-import { useState } from "react";
+/** biome-ignore-all lint/correctness/noChildrenProp: react-form children prop */
+import { useForm } from "@tanstack/react-form";
+import { useQueryClient } from "@tanstack/react-query";
+import type { FC } from "react";
 import { Button } from "~/components/ui/button";
 import {
 	Card,
@@ -17,151 +20,208 @@ import {
 	SelectValue,
 } from "~/components/ui/select";
 import type { Entry } from "~/lib/api";
+import { useCurrentEntry, useEntriesActions } from "~/stores/entries";
 
 interface EntryFormProps {
-	initialData?: Partial<Entry>;
-	onSubmit: (data: Omit<Entry, "id">) => Promise<void>;
-	onCancel: () => void;
-	isSubmitting: boolean;
+	handleDialogClose: () => void;
 }
 
-export function EntryForm({
-	initialData,
-	onSubmit,
-	onCancel,
-	isSubmitting,
-}: EntryFormProps) {
-	const [formData, setFormData] = useState<Omit<Entry, "id" | "userId">>({
-		title: initialData?.title || "",
-		type: initialData?.type || "Movie",
-		director: initialData?.director || "",
-		budget: initialData?.budget || "",
-		location: initialData?.location || "",
-		duration: initialData?.duration || "",
-		yearTime: initialData?.yearTime || "",
+export const EntryForm: FC<EntryFormProps> = ({ handleDialogClose }) => {
+	const currentEntry = useCurrentEntry();
+	const { editEntry, addEntry } = useEntriesActions();
+	const form = useForm({
+		defaultValues: {
+			title: currentEntry?.title || "",
+			type: currentEntry?.type || "Movie",
+			director: currentEntry?.director || "",
+			budget: currentEntry?.budget || "",
+			location: currentEntry?.location || "",
+			duration: currentEntry?.duration || "",
+			yearTime: currentEntry?.yearTime || "",
+		} as Omit<Entry, "id" | "userId">,
+		onSubmit: async ({ value }) => {
+			if (currentEntry) {
+				await editEntry(currentEntry.id as number, {
+					id: currentEntry.id,
+					...value,
+				});
+				handleDialogClose();
+			} else {
+				await addEntry(value);
+				handleDialogClose();
+			}
+		},
 	});
 
-	const handleChange = (
-		e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-	) => {
-		const { name, value } = e.target;
-		setFormData((prev) => ({ ...prev, [name]: value }));
-	};
-
-	const handleSelectChange = (value: string) => {
-		setFormData((prev) => ({ ...prev, type: value as "Movie" | "TV Show" }));
-	};
-
-	const handleSubmit = async (e: React.FormEvent) => {
-		e.preventDefault();
-		await onSubmit(formData);
-	};
-
 	return (
-		<form onSubmit={handleSubmit}>
+		<form
+			onSubmit={(e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				form.handleSubmit();
+			}}
+		>
 			<Card className="w-full max-w-2xl mx-auto">
 				<CardHeader>
-					<CardTitle>{initialData?.id ? "Edit" : "Create"} Entry</CardTitle>
+					<CardTitle>
+						Fill the form to {currentEntry ? "edit" : "add"} the
+						{currentEntry ? (
+							<em className="text-indigo-600">"{currentEntry?.title}"</em>
+						) : (
+							" new "
+						)}
+						entry
+					</CardTitle>
 				</CardHeader>
 				<CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-					<div className="space-y-2">
-						<Label htmlFor="title">
-							Title <span className="text-red-500">*</span>
-						</Label>
-						<Input
-							id="title"
-							name="title"
-							value={formData.title}
-							onChange={handleChange}
-							required
-						/>
-					</div>
-					<div className="space-y-2">
-						<Label htmlFor="type">
-							Type <span className="text-red-500">*</span>
-						</Label>
-						<Select
-							name="type"
-							value={formData.type}
-							onValueChange={handleSelectChange}
-						>
-							<SelectTrigger>
-								<SelectValue placeholder="Select a type" />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="Movie">Movie</SelectItem>
-								<SelectItem value="TV Show">TV Show</SelectItem>
-							</SelectContent>
-						</Select>
-					</div>
-					<div className="space-y-2">
-						<Label htmlFor="director">
-							Director <span className="text-red-500">*</span>
-						</Label>
-						<Input
-							id="director"
-							name="director"
-							value={formData.director}
-							onChange={handleChange}
-							required
-						/>
-					</div>
-					<div className="space-y-2">
-						<Label htmlFor="budget">Budget</Label>
-						<Input
-							id="budget"
-							name="budget"
-							value={formData.budget}
-							onChange={handleChange}
-						/>
-					</div>
-					<div className="space-y-2">
-						<Label htmlFor="location">Location</Label>
-						<Input
-							id="location"
-							name="location"
-							value={formData.location}
-							onChange={handleChange}
-						/>
-					</div>
-					<div className="space-y-2">
-						<Label htmlFor="duration">Duration</Label>
-						<Input
-							id="duration"
-							name="duration"
-							value={formData.duration}
-							onChange={handleChange}
-							placeholder="e.g., 120 min, 45 min/ep"
-						/>
-					</div>
-					<div className="space-y-2 md:col-span-2">
-						<Label htmlFor="yearTime">
-							Year/Time <span className="text-red-500">*</span>
-						</Label>
-						<Input
-							id="yearTime"
-							name="yearTime"
-							value={formData.yearTime}
-							onChange={handleChange}
-							placeholder="e.g., 2023, 2020-2023, Summer 2023"
-							required
-						/>
-					</div>
+					<form.Field
+						name="title"
+						children={(field) => (
+							<div className="space-y-2">
+								<Label htmlFor={field.name}>
+									Title <span className="text-red-500">*</span>
+								</Label>
+								<Input
+									id={field.name}
+									name={field.name}
+									value={field.state.value}
+									onBlur={field.handleBlur}
+									onChange={(e) => field.handleChange(e.target.value)}
+									required
+								/>
+							</div>
+						)}
+					/>
+					<form.Field
+						name="type"
+						children={(field) => (
+							<div className="space-y-2">
+								<Label htmlFor={field.name}>
+									Type <span className="text-red-500">*</span>
+								</Label>
+								<Select
+									name={field.name}
+									value={field.state.value}
+									onValueChange={(
+										value: Omit<Entry, "id" | "userId">["type"],
+									) => field.handleChange(value)}
+								>
+									<SelectTrigger>
+										<SelectValue placeholder="Select a type" />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="Movie">Movie</SelectItem>
+										<SelectItem value="TV Show">TV Show</SelectItem>
+									</SelectContent>
+								</Select>
+							</div>
+						)}
+					/>
+					<form.Field
+						name="director"
+						children={(field) => (
+							<div className="space-y-2">
+								<Label htmlFor={field.name}>
+									Director <span className="text-red-500">*</span>
+								</Label>
+								<Input
+									id={field.name}
+									name={field.name}
+									value={field.state.value}
+									onBlur={field.handleBlur}
+									onChange={(e) => field.handleChange(e.target.value)}
+									required
+								/>
+							</div>
+						)}
+					/>
+					<form.Field
+						name="budget"
+						children={(field) => (
+							<div className="space-y-2">
+								<Label htmlFor={field.name}>Budget</Label>
+								<Input
+									id={field.name}
+									name={field.name}
+									value={field.state.value}
+									onBlur={field.handleBlur}
+									onChange={(e) => field.handleChange(e.target.value)}
+								/>
+							</div>
+						)}
+					/>
+					<form.Field
+						name="location"
+						children={(field) => (
+							<div className="space-y-2">
+								<Label htmlFor={field.name}>Location</Label>
+								<Input
+									id={field.name}
+									name={field.name}
+									value={field.state.value}
+									onBlur={field.handleBlur}
+									onChange={(e) => field.handleChange(e.target.value)}
+								/>
+							</div>
+						)}
+					/>
+					<form.Field
+						name="duration"
+						children={(field) => (
+							<div className="space-y-2">
+								<Label htmlFor={field.name}>Duration</Label>
+								<Input
+									id={field.name}
+									name={field.name}
+									value={field.state.value}
+									onBlur={field.handleBlur}
+									onChange={(e) => field.handleChange(e.target.value)}
+									placeholder="e.g., 120 min, 45 min/ep"
+								/>
+							</div>
+						)}
+					/>
+					<form.Field
+						name="yearTime"
+						children={(field) => (
+							<div className="space-y-2 md:col-span-2">
+								<Label htmlFor={field.name}>
+									Year/Time <span className="text-red-500">*</span>
+								</Label>
+								<Input
+									id={field.name}
+									name={field.name}
+									value={field.state.value}
+									onBlur={field.handleBlur}
+									onChange={(e) => field.handleChange(e.target.value)}
+									placeholder="e.g., 2023, 2020-2023, Summer 2023"
+									required
+								/>
+							</div>
+						)}
+					/>
 				</CardContent>
 				<CardFooter className="flex justify-end space-x-3 pt-6">
-					<Button
-						type="button"
-						variant="outline"
-						onClick={onCancel}
-						disabled={isSubmitting}
-					>
-						Cancel
-					</Button>
-					<Button type="submit" disabled={isSubmitting}>
-						{isSubmitting ? "Saving..." : "Save"}
-					</Button>
+					<form.Subscribe
+						selector={(state) => [state.canSubmit, state.isSubmitting]}
+						children={([canSubmit, isSubmitting]) => (
+							<>
+								<Button
+									type="button"
+									variant="outline"
+									onClick={handleDialogClose}
+									disabled={isSubmitting}
+								>
+									Cancel
+								</Button>
+								<Button type="submit" disabled={!canSubmit || isSubmitting}>
+									{isSubmitting ? "Saving..." : "Save"}
+								</Button>
+							</>
+						)}
+					/>
 				</CardFooter>
 			</Card>
 		</form>
 	);
-}
+};

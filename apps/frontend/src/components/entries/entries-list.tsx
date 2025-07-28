@@ -1,5 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import {
 	Calendar,
 	Clock,
@@ -10,7 +9,7 @@ import {
 	User,
 } from "lucide-react";
 import type { FC } from "react";
-import { useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { Button } from "~/components/ui/button";
 import {
 	Card,
@@ -22,61 +21,147 @@ import {
 import {
 	Dialog,
 	DialogContent,
-	DialogHeader,
+	DialogDescription,
 	DialogTitle,
 } from "~/components/ui/dialog";
-import { deleteEntry, type Entry, getEntries, updateEntry } from "~/lib/api";
+import { type Entry, getEntries } from "~/lib/api";
+import {
+	useCurrentEntry,
+	useEntries,
+	useEntriesActions,
+} from "~/stores/entries";
 import { EntryForm } from "./entry-form";
 
 interface EntriesListProps {
 	search?: string;
 }
 
+const EntryCard: FC<{
+	entry: Entry;
+}> = memo(({ entry }) => {
+	const { deleteEntry, setCurrentEntry } = useEntriesActions();
+	return (
+		<Card className="hover:shadow-lg transition-shadow duration-200 !rounded-md">
+			<CardHeader>
+				<div className="flex items-center justify-between">
+					<CardTitle className="flex items-center gap-2">
+						{entry.type === "Movie" ? (
+							<Film className="h-6 w-6 text-indigo-600" />
+						) : (
+							<Tv className="h-6 w-6 text-indigo-600" />
+						)}
+						{entry.title}
+					</CardTitle>
+					<span
+						className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold leading-5 ${entry.type === "Movie" ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800"}`}
+					>
+						{entry.type}
+					</span>
+				</div>
+			</CardHeader>
+			<CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-muted-foreground">
+				<div className="flex items-center gap-2">
+					<User className="h-4 w-4 text-muted-foreground" />
+					<span>
+						<strong>Director:</strong> {entry.director}
+					</span>
+				</div>
+				{entry.yearTime && (
+					<div className="flex items-center gap-2">
+						<Calendar className="h-4 w-4 text-muted-foreground" />
+						<span>
+							<strong>Year:</strong> {entry.yearTime}
+						</span>
+					</div>
+				)}
+				{entry.budget && (
+					<div className="flex items-center gap-2">
+						<DollarSign className="h-4 w-4 text-muted-foreground" />
+						<span>
+							<strong>Budget:</strong> {entry.budget}
+						</span>
+					</div>
+				)}
+				{entry.location && (
+					<div className="flex items-center gap-2">
+						<MapPin className="h-4 w-4 text-muted-foreground" />
+						<span>
+							<strong>Location:</strong> {entry.location}
+						</span>
+					</div>
+				)}
+				{entry.duration && (
+					<div className="flex items-center gap-2">
+						<Clock className="h-4 w-4 text-gray-500" />
+						<span>
+							<strong>Duration:</strong> {entry.duration}
+						</span>
+					</div>
+				)}
+			</CardContent>
+			<CardFooter className="flex justify-end space-x-2 bg-muted/50 py-3 px-6 rounded-md">
+				<Button
+					variant="ghost"
+					className="flex-1  sm:grow-0"
+					onClick={() => setCurrentEntry(entry.id as number)}
+				>
+					Edit
+				</Button>
+				<Button
+					variant="destructive"
+					className="flex-1  sm:grow-0"
+					onClick={() => deleteEntry(entry.id as number)}
+				>
+					Delete
+				</Button>
+			</CardFooter>
+		</Card>
+	);
+});
+
 export const EntriesList: FC<EntriesListProps> = ({ search = "" }) => {
-	const router = useRouter();
-	const queryClient = useQueryClient();
 	const [cursor, setCursor] = useState<number | undefined>();
-	const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
+	const { setCurrentEntry, setEntries } = useEntriesActions();
+	const currentEntry = useCurrentEntry();
+	const entries = useEntries();
 
-	const { mutate: deleteMutate } = useMutation({
-		mutationFn: (id: number) => deleteEntry(id),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["entries"] });
-		},
-	});
-
-	const { mutate: updateMutate, isPending: isUpdating } = useMutation({
-		mutationFn: ({ id, entry }: { id: number; entry: Entry }) =>
-			updateEntry(id, entry),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["entries"] });
-			setEditingEntry(null);
-		},
-	});
-
-	const { data, isLoading, isError, error } = useQuery({
+	const { isLoading, isError, error, refetch } = useQuery({
 		queryKey: ["entries", cursor],
-		queryFn: () => getEntries(cursor),
+		queryFn: async () => {
+			const entriesData = await getEntries(cursor);
+			setEntries(entriesData.entries);
+			return entriesData;
+		},
 		retry: false,
 	});
 
-	const handleUpdate = async (formData: Omit<Entry, "id">) => {
-		if (editingEntry) {
-			updateMutate({ id: editingEntry.id as number, entry: formData });
-		}
-	};
 	const filteredEntries = useMemo(
 		() =>
-			data?.entries.filter((entry) => {
+			entries.filter((entry) => {
 				const term = search.toLowerCase();
 				return (
-					entry.title.toLowerCase().includes(term) ||
-					entry.director.toLowerCase().includes(term) ||
-					(entry.yearTime && entry.yearTime.toLowerCase().includes(term)) ||
-					(entry.location && entry.location.toLowerCase().includes(term))
+					entry.title.toLowerCase().includes(term) ??
+					entry.director.toLowerCase().includes(term) ??
+					entry.yearTime ??
+					entry.yearTime?.toLowerCase().includes(term) ??
+					entry.location ??
+					entry?.location?.toLowerCase().includes(term)
 				);
 			}),
-		[data?.entries, search],
+		[entries, search],
+	);
+
+	const filteredEntriesEls = useMemo(
+		() =>
+			filteredEntries?.map((entry) => (
+				<EntryCard key={entry.id} entry={entry} />
+			)),
+		[filteredEntries],
+	);
+
+	const handleDialogClose = useCallback(
+		() => setCurrentEntry(null),
+		[setCurrentEntry],
 	);
 
 	if (isError) {
@@ -85,14 +170,14 @@ export const EntriesList: FC<EntriesListProps> = ({ search = "" }) => {
 				<h3 className="text-sm font-medium text-destructive">
 					Error loading entries: {error.message}
 				</h3>
-				<Button onClick={() => router.invalidate()} className="mt-4">
+				<Button onClick={() => refetch()} className="mt-4">
 					Retry
 				</Button>
 			</div>
 		);
 	}
 
-	if (data?.entries.length === 0 && !isLoading) {
+	if (entries?.length === 0 && !isLoading) {
 		return (
 			<div className="text-center py-12">
 				<h3 className="mt-2 text-sm font-medium text-muted-foreground">
@@ -115,86 +200,7 @@ export const EntriesList: FC<EntriesListProps> = ({ search = "" }) => {
 	return (
 		<div className="space-y-4">
 			{filteredEntries?.length ? (
-				filteredEntries?.map((entry) => (
-					<Card
-						key={entry.id}
-						className="hover:shadow-lg transition-shadow duration-200 !rounded-md"
-					>
-						<CardHeader>
-							<div className="flex items-center justify-between">
-								<CardTitle className="flex items-center gap-2">
-									{entry.type === "Movie" ? (
-										<Film className="h-6 w-6 text-indigo-600" />
-									) : (
-										<Tv className="h-6 w-6 text-indigo-600" />
-									)}
-									{entry.title}
-								</CardTitle>
-								<span
-									className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold leading-5 ${entry.type === "Movie" ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800"}`}
-								>
-									{entry.type}
-								</span>
-							</div>
-						</CardHeader>
-						<CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-muted-foreground">
-							<div className="flex items-center gap-2">
-								<User className="h-4 w-4 text-muted-foreground" />
-								<span>
-									<strong>Director:</strong> {entry.director}
-								</span>
-							</div>
-							{entry.yearTime && (
-								<div className="flex items-center gap-2">
-									<Calendar className="h-4 w-4 text-muted-foreground" />
-									<span>
-										<strong>Year:</strong> {entry.yearTime}
-									</span>
-								</div>
-							)}
-							{entry.budget && (
-								<div className="flex items-center gap-2">
-									<DollarSign className="h-4 w-4 text-muted-foreground" />
-									<span>
-										<strong>Budget:</strong> {entry.budget}
-									</span>
-								</div>
-							)}
-							{entry.location && (
-								<div className="flex items-center gap-2">
-									<MapPin className="h-4 w-4 text-muted-foreground" />
-									<span>
-										<strong>Location:</strong> {entry.location}
-									</span>
-								</div>
-							)}
-							{entry.duration && (
-								<div className="flex items-center gap-2">
-									<Clock className="h-4 w-4 text-gray-500" />
-									<span>
-										<strong>Duration:</strong> {entry.duration}
-									</span>
-								</div>
-							)}
-						</CardContent>
-						<CardFooter className="flex justify-end space-x-2 bg-muted/50 py-3 px-6 rounded-md">
-							<Button
-								variant="ghost"
-								className="flex-1  sm:grow-0"
-								onClick={() => setEditingEntry(entry)}
-							>
-								Edit
-							</Button>
-							<Button
-								variant="destructive"
-								className="flex-1  sm:grow-0"
-								onClick={() => deleteMutate(entry.id as number)}
-							>
-								Delete
-							</Button>
-						</CardFooter>
-					</Card>
-				))
+				filteredEntriesEls
 			) : (
 				<div className="text-center py-12">
 					<h3 className="mt-2 text-sm font-medium text-muted-foreground">
@@ -203,18 +209,16 @@ export const EntriesList: FC<EntriesListProps> = ({ search = "" }) => {
 				</div>
 			)}
 
-			<Dialog open={!!editingEntry} onOpenChange={() => setEditingEntry(null)}>
+			<Dialog open={!!currentEntry} onOpenChange={handleDialogClose}>
 				<DialogContent>
-					<DialogHeader>
-						<DialogTitle>Edit Entry</DialogTitle>
-					</DialogHeader>
+					<DialogTitle>{currentEntry ? "Edit" : "Create"} Entry</DialogTitle>
+					<DialogDescription>
+						{currentEntry
+							? `Edit entry "${currentEntry.title}"`
+							: "Add a new entry"}
+					</DialogDescription>
 					<div className="mt-4">
-						<EntryForm
-							initialData={editingEntry ?? undefined}
-							onSubmit={handleUpdate}
-							onCancel={() => setEditingEntry(null)}
-							isSubmitting={isUpdating}
-						/>
+						<EntryForm handleDialogClose={handleDialogClose} />
 					</div>
 				</DialogContent>
 			</Dialog>

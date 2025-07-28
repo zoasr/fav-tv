@@ -1,14 +1,15 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Button } from "~/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
+	DialogDescription,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
 } from "~/components/ui/dialog";
-import { createEntry, type Entry } from "~/lib/api";
+import { useCurrentEntry, useEntriesActions } from "~/stores/entries";
 import { Input } from "../ui/input";
 // import { useAuth } from "~/contexts/AuthContext";
 import { EntriesList } from "./entries-list";
@@ -17,27 +18,11 @@ import { EntryForm } from "./entry-form";
 export function EntriesPage() {
 	const [isFormOpen, setIsFormOpen] = useState(false);
 	const [search, setSearch] = useState("");
-	const queryClient = useQueryClient();
+	const { setCurrentEntry } = useEntriesActions();
 
-	const { mutate: createEntryMutate, isPending: isCreating } = useMutation({
-		mutationFn: (data: Omit<Entry, "id" | "userId">) =>
-			createEntry(data as Entry),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["entries"] });
-			setIsFormOpen(false);
-		},
-	});
-
-	const handleFormSubmit = async (
-		data: Omit<Entry, "id" | "userId">,
-	): Promise<void> => {
-		await new Promise<void>((resolve) => {
-			createEntryMutate(data, {
-				onSuccess: () => resolve(),
-				// Optionally handle onError if needed
-			});
-		});
-	};
+	const handleDialogClose = useCallback(() => {
+		setCurrentEntry(null);
+	}, [setCurrentEntry]);
 
 	return (
 		<div className="space-y-6">
@@ -60,13 +45,12 @@ export function EntriesPage() {
 						<DialogContent>
 							<DialogHeader>
 								<DialogTitle>Add New Entry</DialogTitle>
+								<DialogDescription>
+									Add a new movie or TV show to your list.
+								</DialogDescription>
 							</DialogHeader>
 							<div className="mt-4">
-								<EntryForm
-									onSubmit={handleFormSubmit}
-									onCancel={() => setIsFormOpen(false)}
-									isSubmitting={isCreating}
-								/>
+								<EntryForm handleDialogClose={handleDialogClose} />
 							</div>
 						</DialogContent>
 					</Dialog>

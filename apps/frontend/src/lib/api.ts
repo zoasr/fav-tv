@@ -1,5 +1,3 @@
-import { authClient } from "~/auth/auth-client";
-
 export interface SignUpData {
 	name: string;
 	email: string;

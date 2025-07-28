@@ -30,8 +30,6 @@ function SignInComponent() {
 			email: formData.get('email') as string,
 			password: formData.get('password') as string,
 		};
-		// const res = await signIn({ data: entries });
-		// console.log(res);
 		const res = await authClient.signIn.email({
 			email: entries.email,
 			password: entries.password,

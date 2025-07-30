@@ -7,6 +7,7 @@ export const ERROR_KEYS = {
 	VALIDATION_FAILED: "VALIDATION_FAILED",
 	NOT_FOUND: "NOT_FOUND",
 	SERVER_ERROR: "SERVER_ERROR",
+	SEARCH_ERROR: "SEARCH_ERROR",
 } as const;
 
 export const ERROR_MESSAGES = {
@@ -15,6 +16,7 @@ export const ERROR_MESSAGES = {
 	[ERROR_KEYS.VALIDATION_FAILED]: "Invalid request data",
 	[ERROR_KEYS.NOT_FOUND]: "Resource not found",
 	[ERROR_KEYS.SERVER_ERROR]: "Internal server error",
+	[ERROR_KEYS.SEARCH_ERROR]: "Can't find a movie or tv show",
 };
 
 export const ERROR_STATUS_CODES = {
@@ -23,6 +25,7 @@ export const ERROR_STATUS_CODES = {
 	[ERROR_KEYS.VALIDATION_FAILED]: 400,
 	[ERROR_KEYS.NOT_FOUND]: 404,
 	[ERROR_KEYS.SERVER_ERROR]: 500,
+	[ERROR_KEYS.SEARCH_ERROR]: 404,
 };
 
 export interface ErrorResponse {

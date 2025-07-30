@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "tsc && node dist/index.js",
-    "dev": "tsx watch src/index.ts",
+    "dev": "deno run --watch=./src --unstable-sloppy-imports -A src/index.ts",
     "build": "tsc",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
@@ -25,6 +25,7 @@
     "dotenv": "^17.2.0",
     "drizzle-orm": "^0.44.3",
     "express": "^5.1.0",
+    "moviedb-promise": "^4.0.7",
     "mysql2": "^3.14.2",
     "zod": "^4.0.9"
   },

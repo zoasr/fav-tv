@@ -1,5 +1,5 @@
-import { create } from "zustand";
-import { createEntry, deleteEntry, type Entry, updateEntry } from "~/lib/api";
+import { create } from 'zustand';
+import { createEntry, deleteEntry, type Entry, updateEntry } from '~/lib/api';
 
 type EntriesStore = {
 	entries: Entry[];

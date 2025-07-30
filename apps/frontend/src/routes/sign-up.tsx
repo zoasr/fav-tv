@@ -1,20 +1,20 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { Loader } from "lucide-react";
-import { useState } from "react";
-import { authClient } from "~/auth/auth-client";
-import { Button } from "~/components/ui/button";
+import { createFileRoute, Link } from '@tanstack/react-router';
+import { Loader } from 'lucide-react';
+import { useState } from 'react';
+import { authClient } from '~/auth/auth-client';
+import { Button } from '~/components/ui/button';
 import {
 	Card,
 	CardContent,
 	CardDescription,
 	CardHeader,
 	CardTitle,
-} from "~/components/ui/card";
-import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
-import type { SignUpData } from "~/lib/api";
+} from '~/components/ui/card';
+import { Input } from '~/components/ui/input';
+import { Label } from '~/components/ui/label';
+import type { SignUpData } from '~/lib/api';
 
-export const Route = createFileRoute("/sign-up")({
+export const Route = createFileRoute('/sign-up')({
 	component: SignUpComponent,
 });
 
@@ -27,9 +27,9 @@ function SignUpComponent() {
 		e.preventDefault();
 		const formData = new FormData(e.target as HTMLFormElement);
 		const entries: SignUpData = {
-			name: formData.get("name") as string,
-			email: formData.get("email") as string,
-			password: formData.get("password") as string,
+			name: formData.get('name') as string,
+			email: formData.get('email') as string,
+			password: formData.get('password') as string,
 		};
 		const res = await authClient.signUp.email({
 			name: entries.name,
@@ -41,7 +41,7 @@ function SignUpComponent() {
 		} else {
 			setError(null);
 			setIsSubmitting(false);
-			navigate({ to: "/" });
+			navigate({ to: '/' });
 		}
 		// await signUp({ data: entries });
 	};
@@ -89,7 +89,7 @@ function SignUpComponent() {
 						</p>
 					</form>
 					<div className="mt-4 text-center text-sm">
-						Already have an account?{" "}
+						Already have an account?{' '}
 						<Link to="/sign-in" className="underline">
 							Sign in
 						</Link>

@@ -6,7 +6,7 @@ export const seo = ({
 	canonical,
 	author,
 	robots,
-	lang = "en",
+	lang = 'en',
 	extra = [],
 }: {
 	title: string;
@@ -21,32 +21,30 @@ export const seo = ({
 }) => {
 	const tags = [
 		{ title },
-		{ name: "description", content: description },
-		{ name: "keywords", content: keywords },
-		{ name: "author", content: author },
-		{ name: "robots", content: robots },
-		{ name: "language", content: lang },
-		{ rel: "canonical", href: canonical },
-		{ name: "twitter:title", content: title },
-		{ name: "twitter:description", content: description },
+		{ name: 'description', content: description },
+		{ name: 'keywords', content: keywords },
+		{ name: 'author', content: author },
+		{ name: 'robots', content: robots },
+		{ name: 'language', content: lang },
+		{ rel: 'canonical', href: canonical },
+		{ name: 'twitter:title', content: title },
+		{ name: 'twitter:description', content: description },
 		{
-			name: "twitter:card",
-			content: image ? "summary_large_image" : "summary",
+			name: 'twitter:card',
+			content: image ? 'summary_large_image' : 'summary',
 		},
 		...(image
 			? [
-					{ name: "twitter:image", content: image },
-					{ name: "og:image", content: image },
+					{ name: 'twitter:image', content: image },
+					{ name: 'og:image', content: image },
 				]
 			: []),
-		{ name: "og:type", content: "website" },
-		{ name: "og:title", content: title },
-		{ name: "og:description", content: description },
+		{ name: 'og:type', content: 'website' },
+		{ name: 'og:title', content: title },
+		{ name: 'og:description', content: description },
 		...extra,
 	].filter((tag) =>
-		Object.values(tag).every(
-			(v) => v !== undefined && v !== null && v !== ""
-		)
+		Object.values(tag).every((v) => v !== undefined && v !== null && v !== ''),
 	);
 
 	return tags;

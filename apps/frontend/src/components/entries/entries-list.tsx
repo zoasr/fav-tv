@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from '@tanstack/react-query';
 import {
 	Calendar,
 	Clock,
@@ -7,30 +7,30 @@ import {
 	MapPin,
 	Tv,
 	User,
-} from "lucide-react";
-import type { FC } from "react";
-import { memo, useCallback, useMemo, useState } from "react";
-import { Button } from "~/components/ui/button";
+} from 'lucide-react';
+import type { FC } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
+import { Button } from '~/components/ui/button';
 import {
 	Card,
 	CardContent,
 	CardFooter,
 	CardHeader,
 	CardTitle,
-} from "~/components/ui/card";
+} from '~/components/ui/card';
 import {
 	Dialog,
 	DialogContent,
 	DialogDescription,
 	DialogTitle,
-} from "~/components/ui/dialog";
-import { type Entry, getEntries } from "~/lib/api";
+} from '~/components/ui/dialog';
+import { type Entry, getEntries } from '~/lib/api';
 import {
 	useCurrentEntry,
 	useEntries,
 	useEntriesActions,
-} from "~/stores/entries";
-import { EntryForm } from "./entry-form";
+} from '~/stores/entries';
+import { EntryForm } from './entry-form';
 
 interface EntriesListProps {
 	search?: string;
@@ -45,7 +45,7 @@ const EntryCard: FC<{
 			<CardHeader>
 				<div className="flex items-center justify-between">
 					<CardTitle className="flex items-center gap-2">
-						{entry.type === "Movie" ? (
+						{entry.type === 'Movie' ? (
 							<Film className="h-6 w-6 text-indigo-600" />
 						) : (
 							<Tv className="h-6 w-6 text-indigo-600" />
@@ -53,7 +53,7 @@ const EntryCard: FC<{
 						{entry.title}
 					</CardTitle>
 					<span
-						className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold leading-5 ${entry.type === "Movie" ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800"}`}
+						className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold leading-5 ${entry.type === 'Movie' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}
 					>
 						{entry.type}
 					</span>
@@ -119,14 +119,14 @@ const EntryCard: FC<{
 	);
 });
 
-export const EntriesList: FC<EntriesListProps> = ({ search = "" }) => {
-	const [cursor, setCursor] = useState<number | undefined>();
+export const EntriesList: FC<EntriesListProps> = ({ search = '' }) => {
+	const [cursor, _setCursor] = useState<number | undefined>();
 	const { setCurrentEntry, setEntries } = useEntriesActions();
 	const currentEntry = useCurrentEntry();
 	const entries = useEntries();
 
 	const { isLoading, isError, error, refetch } = useQuery({
-		queryKey: ["entries", cursor],
+		queryKey: ['entries', cursor],
 		queryFn: async () => {
 			const entriesData = await getEntries(cursor);
 			setEntries(entriesData.entries);
@@ -210,11 +210,11 @@ export const EntriesList: FC<EntriesListProps> = ({ search = "" }) => {
 
 			<Dialog open={!!currentEntry} onOpenChange={handleDialogClose}>
 				<DialogContent>
-					<DialogTitle>{currentEntry ? "Edit" : "Create"} Entry</DialogTitle>
+					<DialogTitle>{currentEntry ? 'Edit' : 'Create'} Entry</DialogTitle>
 					<DialogDescription>
 						{currentEntry
 							? `Edit entry "${currentEntry.title}"`
-							: "Add a new entry"}
+							: 'Add a new entry'}
 					</DialogDescription>
 					<div className="mt-4">
 						<EntryForm handleDialogClose={handleDialogClose} />

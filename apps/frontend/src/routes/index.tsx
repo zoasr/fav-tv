@@ -1,10 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { EntriesPage } from "~/components/entries/entries-page";
-import { HeroSection } from "~/components/ui/hero-section";
-import { getSession } from "./__root";
+import { useQuery } from '@tanstack/react-query';
+import { createFileRoute, useRouter } from '@tanstack/react-router';
+import { EntriesPage } from '~/components/entries/entries-page';
+import { HeroSection } from '~/components/ui/hero-section';
+import { getSession } from './__root';
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute('/')({
 	component: HomeRoute,
 });
 
@@ -16,18 +16,18 @@ function HomeRoute() {
 		isError,
 		refetch,
 	} = useQuery({
-		queryKey: ["session"],
+		queryKey: ['session'],
 		queryFn: getSession,
 		retry: false,
 	});
 	return (
-		<div className="min-h-screen ">
-			<main className="container mx-auto px-4 py-8 sm:px-6 lg:px-8 max-w-[1024px]">
+		<div className="">
+			<main className="container mx-auto px-4 h-full py-8 sm:px-6 lg:px-8 max-w-[1024px]">
 				{isLoading && (
 					<div className="flex flex-col gap-6 animate-pulse">
 						<div className="h-8 w-1/3 bg-muted rounded mb-4" />
 						<div className="space-y-4">
-							{["skeleton-1", "skeleton-2", "skeleton-3"].map((s) => (
+							{['skeleton-1', 'skeleton-2', 'skeleton-3'].map((s) => (
 								<div
 									key={s}
 									className="rounded-md bg-muted/60 p-6 flex flex-col gap-4 shadow"

@@ -1,26 +1,26 @@
 /** biome-ignore-all lint/correctness/noChildrenProp: react-form children prop */
-import { useForm } from "@tanstack/react-form";
-import { useQueryClient } from "@tanstack/react-query";
-import type { FC } from "react";
-import { Button } from "~/components/ui/button";
+import { useForm } from '@tanstack/react-form';
+import { useQueryClient } from '@tanstack/react-query';
+import type { FC } from 'react';
+import { Button } from '~/components/ui/button';
 import {
 	Card,
 	CardContent,
 	CardFooter,
 	CardHeader,
 	CardTitle,
-} from "~/components/ui/card";
-import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
+} from '~/components/ui/card';
+import { Input } from '~/components/ui/input';
+import { Label } from '~/components/ui/label';
 import {
 	Select,
 	SelectContent,
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
-} from "~/components/ui/select";
-import type { Entry } from "~/lib/api";
-import { useCurrentEntry, useEntriesActions } from "~/stores/entries";
+} from '~/components/ui/select';
+import type { Entry } from '~/lib/api';
+import { useCurrentEntry, useEntriesActions } from '~/stores/entries';
 
 interface EntryFormProps {
 	handleDialogClose: () => void;
@@ -32,14 +32,14 @@ export const EntryForm: FC<EntryFormProps> = ({ handleDialogClose }) => {
 	const queryClient = useQueryClient();
 	const form = useForm({
 		defaultValues: {
-			title: currentEntry?.title || "",
-			type: currentEntry?.type || "Movie",
-			director: currentEntry?.director || "",
-			budget: currentEntry?.budget || "",
-			location: currentEntry?.location || "",
-			duration: currentEntry?.duration || "",
-			yearTime: currentEntry?.yearTime || "",
-		} as Omit<Entry, "id" | "userId">,
+			title: currentEntry?.title || '',
+			type: currentEntry?.type || 'Movie',
+			director: currentEntry?.director || '',
+			budget: currentEntry?.budget || '',
+			location: currentEntry?.location || '',
+			duration: currentEntry?.duration || '',
+			yearTime: currentEntry?.yearTime || '',
+		} as Omit<Entry, 'id' | 'userId'>,
 		onSubmit: async ({ value }) => {
 			if (currentEntry) {
 				await editEntry(currentEntry.id as number, {
@@ -49,7 +49,7 @@ export const EntryForm: FC<EntryFormProps> = ({ handleDialogClose }) => {
 				handleDialogClose();
 			} else {
 				await addEntry(value);
-				queryClient.invalidateQueries({ queryKey: ["entries"] });
+				queryClient.invalidateQueries({ queryKey: ['entries'] });
 				handleDialogClose();
 			}
 		},
@@ -66,11 +66,11 @@ export const EntryForm: FC<EntryFormProps> = ({ handleDialogClose }) => {
 			<Card className="w-full max-w-2xl mx-auto">
 				<CardHeader>
 					<CardTitle>
-						Fill the form to {currentEntry ? "edit" : "add"} the
+						Fill the form to {currentEntry ? 'edit' : 'add'} the
 						{currentEntry ? (
 							<em className="text-indigo-600">"{currentEntry?.title}"</em>
 						) : (
-							" new "
+							' new '
 						)}
 						entry
 					</CardTitle>
@@ -105,7 +105,7 @@ export const EntryForm: FC<EntryFormProps> = ({ handleDialogClose }) => {
 									name={field.name}
 									value={field.state.value}
 									onValueChange={(
-										value: Omit<Entry, "id" | "userId">["type"],
+										value: Omit<Entry, 'id' | 'userId'>['type'],
 									) => field.handleChange(value)}
 								>
 									<SelectTrigger>
@@ -217,7 +217,7 @@ export const EntryForm: FC<EntryFormProps> = ({ handleDialogClose }) => {
 									Cancel
 								</Button>
 								<Button type="submit" disabled={!canSubmit || isSubmitting}>
-									{isSubmitting ? "Saving..." : "Save"}
+									{isSubmitting ? 'Saving...' : 'Save'}
 								</Button>
 							</>
 						)}

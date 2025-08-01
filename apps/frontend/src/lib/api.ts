@@ -1,3 +1,6 @@
+import type { SearchResult } from '../../../backend/src/index';
+
+export type { SearchResult } from '../../../backend/src/index';
 export interface SignUpData {
 	name: string;
 	email: string;
@@ -100,4 +103,21 @@ export async function deleteEntry(id: number): Promise<void> {
 	if (!response.ok) {
 		throw new Error('Failed to delete entry');
 	}
+}
+
+export async function searchTMDB(query: string): Promise<SearchResult[]> {
+	const url = new URL('/moviedb/search', API_BASE_URL);
+	url.searchParams.append('query', query);
+
+	const response = await fetch(url.toString(), {
+		credentials: 'include',
+		headers: getJsonHeaders(),
+	});
+
+	if (!response.ok) {
+		const error = await response.json().catch(() => ({}));
+		throw new Error(error.message || 'Failed to search TMDB');
+	}
+
+	return response.json();
 }

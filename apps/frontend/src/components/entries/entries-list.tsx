@@ -48,7 +48,7 @@ const EntryCard: FC<{
 						{entry.type === 'Movie' ? (
 							<Film className="h-6 w-6 text-indigo-600" />
 						) : (
-							<Tv className="h-6 w-6 text-indigo-600" />
+							<Tv className="h-6 w-6 text-green-600" />
 						)}
 						{entry.title}
 					</CardTitle>

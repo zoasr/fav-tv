@@ -7,7 +7,12 @@ import express, {
 	type Request,
 	type Response,
 } from "express";
-import { MovieDb, type MovieResult, type TvResult } from "moviedb-promise";
+import {
+	type Genre,
+	MovieDb,
+	type ProductionCompany,
+	type SimplePerson,
+} from "moviedb-promise";
 import { z } from "zod";
 import { auth } from "./auth.js";
 import { db } from "./db/index.js";
@@ -23,7 +28,30 @@ if (TMDB_API_KEY) {
 	moviedb = new MovieDb(TMDB_API_KEY);
 }
 
-export type SearchResult = MovieResult | TvResult;
+type MovieResult = Exclude<
+	Awaited<ReturnType<MovieDb["searchMovie"]>>["results"],
+	undefined
+>[number];
+type TVResult = Exclude<
+	Awaited<ReturnType<MovieDb["searchTv"]>>["results"],
+	undefined
+>[number];
+
+// Enhanced SearchResult with detailed information for form filling
+export type SearchResult = (MovieResult | TVResult) & {
+	backdrop: string;
+	// Additional fields for form auto-fill
+	director?: string;
+	runtime?: number; // in minutes
+	budget?: number;
+	status?: string;
+	production_countries?: ProductionCompany[];
+	genres?: Genre[];
+	number_of_seasons?: number;
+	number_of_episodes?: number;
+	episode_run_time?: number[];
+	created_by?: SimplePerson[];
+};
 
 const checkAuth = async (req: Request, res: Response) => {
 	const headers = fromNodeHeaders(req.headers);
@@ -199,26 +227,101 @@ app.delete("/entries/:id", async (req: Request, res: Response) => {
 
 // -------------------- MOVIE DB -------------------
 
-const searchTMDB = async (res: Response, query: string) => {
+const getMovieDirector = async (
+	movieId: number,
+): Promise<string | undefined> => {
+	if (!moviedb) return undefined;
+	try {
+		const credits = await moviedb.movieCredits({ id: movieId });
+		const director = credits.crew?.find((person) => person.job === "Director");
+		return director?.name;
+	} catch {
+		return undefined;
+	}
+};
+
+const getTVCreators = (tvShow: any): string | undefined => {
+	return (
+		tvShow.created_by?.map((creator: any) => creator.name).join(", ") ||
+		undefined
+	);
+};
+
+const searchTMDB = async (query: string) => {
 	if (!moviedb) {
 		return new AppError("SERVER_ERROR");
 	}
-	const config = await moviedb.configuration();
-	const data = await moviedb.searchMulti({ query: query });
-	if (!data.results?.length) {
-		return new AppError("SEARCH_ERROR");
-	}
-	const results_with_posters = data.results
-		.filter((result) => !(result.media_type === "person"))
-		.map((result) => ({
-			...result,
-			backdrop: config?.images?.poster_sizes
-				? `${config.images.secure_base_url}${config.images.poster_sizes[3]}${result.poster_path || result.backdrop_path}`
-				: "",
-		}))
-		.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
 
-	return results_with_posters;
+	try {
+		const config = await moviedb.configuration();
+		const searchData = await moviedb.searchMulti({ query: query });
+
+		if (!searchData.results?.length) {
+			return new AppError("SEARCH_ERROR");
+		}
+
+		const filteredResults = searchData.results
+			.filter((result) => !(result.media_type === "person"))
+			.sort((a, b) => (b.popularity || 0) - (a.popularity || 0))
+			.slice(0, 10);
+
+		const detailedResults = await Promise.all(
+			filteredResults.map(async (result): Promise<SearchResult> => {
+				const baseResult = {
+					...result,
+					backdrop: config?.images?.poster_sizes
+						? `${config.images.secure_base_url}${config.images.poster_sizes[3]}${result.poster_path || result.backdrop_path}`
+						: "",
+				};
+
+				if (result.media_type === "movie") {
+					try {
+						if (!result.id) return baseResult;
+						const movieDetails = await moviedb.movieInfo({ id: result.id });
+						const director = await getMovieDirector(result.id);
+
+						return {
+							...baseResult,
+							director,
+							runtime: movieDetails.runtime,
+							budget: movieDetails.budget,
+							status: movieDetails.status,
+							production_countries: movieDetails.production_countries,
+							genres: movieDetails.genres,
+						};
+					} catch {
+						// If detailed fetch fails, return basic result
+						return baseResult;
+					}
+				} else if (result.media_type === "tv") {
+					try {
+						if (!result.id) return baseResult;
+						const tvDetails = await moviedb.tvInfo({ id: result.id });
+						const creators = getTVCreators(tvDetails);
+
+						return {
+							...baseResult,
+							director: creators, // Use creators as "director" for TV shows
+							status: tvDetails.status,
+							production_countries: tvDetails.production_countries,
+							genres: tvDetails.genres,
+							number_of_seasons: tvDetails.number_of_seasons,
+							number_of_episodes: tvDetails.number_of_episodes,
+							episode_run_time: tvDetails.episode_run_time,
+							created_by: tvDetails.created_by,
+						};
+					} catch {
+						return baseResult;
+					}
+				}
+				return baseResult;
+			}),
+		);
+		return detailedResults;
+	} catch (error) {
+		console.error("TMDB search error:", error);
+		return new AppError("SERVER_ERROR", "Failed to search TMDB");
+	}
 };
 const queryParamsSchema = z.object({
 	query: z.string(),
@@ -249,7 +352,7 @@ app.get(
 		const { query } = req.query;
 		if (!query)
 			return sendError(res, "VALIDATION_FAILED", "query parameter is required");
-		const searchResult = await searchTMDB(res, query as string);
+		const searchResult = await searchTMDB(query as string);
 		if (searchResult instanceof AppError)
 			return sendError(res, searchResult.errorKey, searchResult.message);
 		res.json(searchResult);

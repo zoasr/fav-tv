@@ -40,16 +40,14 @@ export function EntriesPage() {
 								+ Add Entry
 							</Button>
 						</DialogTrigger>
-						<DialogContent>
+						<DialogContent className="max-h-[90dvh] flex flex-col">
 							<DialogHeader>
 								<DialogTitle>Add New Entry</DialogTitle>
 								<DialogDescription>
 									Add a new movie or TV show to your list.
 								</DialogDescription>
 							</DialogHeader>
-							<div className="mt-4">
-								<EntryForm handleDialogClose={handleDialogClose} />
-							</div>
+							<EntryForm handleDialogClose={handleDialogClose} />
 						</DialogContent>
 					</Dialog>
 				</div>

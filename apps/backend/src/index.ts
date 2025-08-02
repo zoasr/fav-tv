@@ -101,7 +101,16 @@ app.get("/entries", async (req: Request, res: Response) => {
 
 	try {
 		const results = await db
-			.select()
+			.select({
+				id: entries.id,
+				title: entries.title,
+				type: entries.type,
+				director: entries.director,
+				budget: entries.budget,
+				location: entries.location,
+				duration: entries.duration,
+				yearTime: entries.yearTime,
+			})
 			.from(entries)
 			.where(and(eq(entries.userId, userId), lt(entries.id, cursor)))
 			.orderBy(entries.id)

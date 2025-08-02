@@ -38,7 +38,7 @@ export function EntriesPage() {
 								+ Add Entry
 							</Button>
 						</DialogTrigger>
-						<DialogContent className="max-h-[90dvh] flex flex-col">
+						<DialogContent className="max-h-[80dvh] flex flex-col">
 							<DialogHeader>
 								<DialogTitle>Add New Entry</DialogTitle>
 								<DialogDescription>

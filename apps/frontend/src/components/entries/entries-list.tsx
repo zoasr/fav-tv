@@ -209,7 +209,7 @@ export const EntriesList: FC<EntriesListProps> = ({ search = '' }) => {
 			)}
 
 			<Dialog open={!!currentEntry} onOpenChange={handleDialogClose}>
-				<DialogContent className="h-full max-h-[80dvh] flex flex-col">
+				<DialogContent className="max-h-[80dvh] flex flex-col">
 					<DialogTitle>{currentEntry ? 'Edit' : 'Create'} Entry</DialogTitle>
 					<DialogDescription>
 						{currentEntry

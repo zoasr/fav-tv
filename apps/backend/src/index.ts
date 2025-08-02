@@ -11,6 +11,7 @@ import {
 	type Genre,
 	MovieDb,
 	type ProductionCompany,
+	type ShowResponse,
 	type SimplePerson,
 } from "moviedb-promise";
 import { z } from "zod";
@@ -240,10 +241,9 @@ const getMovieDirector = async (
 	}
 };
 
-const getTVCreators = (tvShow: any): string | undefined => {
+const getTVCreators = (tvShow: ShowResponse): string | undefined => {
 	return (
-		tvShow.created_by?.map((creator: any) => creator.name).join(", ") ||
-		undefined
+		tvShow.created_by?.map((creator) => creator.name).join(", ") || undefined
 	);
 };
 
@@ -257,7 +257,10 @@ const searchTMDB = async (query: string) => {
 		const searchData = await moviedb.searchMulti({ query: query });
 
 		if (!searchData.results?.length) {
-			return new AppError("SEARCH_ERROR");
+			return new AppError(
+				"SEARCH_ERROR",
+				`Can't find movies or TV shows for with the name: ${query}`,
+			);
 		}
 
 		const filteredResults = searchData.results

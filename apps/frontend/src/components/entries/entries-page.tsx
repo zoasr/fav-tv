@@ -8,7 +8,6 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from '~/components/ui/dialog';
-import { useEntriesActions } from '~/stores/entries';
 import { Input } from '../ui/input';
 import { EntriesList } from './entries-list';
 import { EntryForm } from './entry-form';
@@ -16,11 +15,10 @@ import { EntryForm } from './entry-form';
 export function EntriesPage() {
 	const [isFormOpen, setIsFormOpen] = useState(false);
 	const [search, setSearch] = useState('');
-	const { setCurrentEntry } = useEntriesActions();
 
 	const handleDialogClose = useCallback(() => {
-		setCurrentEntry(null);
-	}, [setCurrentEntry]);
+		setIsFormOpen(false);
+	}, []);
 
 	return (
 		<div className="space-y-6">

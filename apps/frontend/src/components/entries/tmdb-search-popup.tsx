@@ -1,5 +1,5 @@
 import { Search, X } from 'lucide-react';
-import { type FC, useEffect } from 'react';
+import type { FC } from 'react';
 import { Button } from '~/components/ui/button';
 import {
 	Dialog,

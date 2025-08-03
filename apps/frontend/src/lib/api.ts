@@ -82,7 +82,6 @@ export interface Entry {
 	location?: string;
 	duration?: string;
 	yearTime: string;
-	userId?: string;
 }
 
 interface PaginatedResponse<T> {

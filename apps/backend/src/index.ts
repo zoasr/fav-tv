@@ -15,10 +15,10 @@ import {
 	type SimplePerson,
 } from 'moviedb-promise';
 import { z } from 'zod';
-import { auth } from './auth.js';
-import { db } from './db/index.js';
-import { entries } from './db/schema/schema.js';
-import { AppError, sendError } from './errors/error.js';
+import { auth } from './auth';
+import { db } from './db/index';
+import { entries } from './db/schema/schema';
+import { AppError, sendError } from './errors/error';
 
 dotenv.config();
 export const app = express();

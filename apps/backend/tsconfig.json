@@ -1,35 +1,17 @@
 {
   "compilerOptions": {
-    "module": "esnext",
-    "target": "esnext",
-    "moduleResolution": "node",
-    "sourceMap": true,
-    "outDir": "dist",
-    "allowJs": true,
+    "target": "es2016",
+    "module": "commonjs",
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "skipLibCheck": true,
-    "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "lib": [
-      "dom",
-      "es6"
-    ],
-    "baseUrl": "./src",
-    "paths": {
-      "@/*": [
-        "./*"
-      ]
-    }
+    "strict": true,
+    "skipLibCheck": true,
+    "outDir": "dist"
   },
-  "exclude": [
-    "node_modules",
-    "dist"
-  ],
   "include": [
-    "src/**/*",
+    "src/**/*.ts"
   ],
-  "files": [
-    "src/index.ts"
+  "exclude": [
+    "node_modules"
   ]
 }

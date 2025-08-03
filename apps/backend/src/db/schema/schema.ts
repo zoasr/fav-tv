@@ -1,5 +1,5 @@
 import { mysqlTable, serial, varchar } from 'drizzle-orm/mysql-core';
-import { user } from './auth-schema.js';
+import { user } from './auth-schema';
 
 export const entries = mysqlTable('entries', {
 	id: serial('id').primaryKey(),

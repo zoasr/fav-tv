@@ -25,21 +25,79 @@ import {
 	DialogTitle,
 } from '~/components/ui/dialog';
 import { type Entry, getEntries } from '~/lib/api';
+import { cn } from '~/lib/utils';
 import {
 	useCurrentEntry,
 	useEntries,
 	useEntriesActions,
 } from '~/stores/entries';
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from '../ui/alert-dialog';
 import { EntryForm } from './entry-form';
 
 interface EntriesListProps {
 	search?: string;
 }
 
+const DeleteDialog = memo(({ entry }: { entry: Entry }) => {
+	const { deleteEntry } = useEntriesActions();
+
+	return (
+		<AlertDialog>
+			<AlertDialogTrigger asChild>
+				<Button variant="destructive" className="flex-1 sm:grow-0">
+					Delete
+				</Button>
+			</AlertDialogTrigger>
+			<AlertDialogContent>
+				<AlertDialogHeader>
+					<AlertDialogTitle>
+						Are you sure you want to delete the entry for{' '}
+						<em
+							className={cn({
+								'text-indigo-600': entry.type === 'Movie',
+								'text-green-600': entry.type === 'TV Show',
+							})}
+						>
+							"{entry.title}"
+						</em>{' '}
+						?
+					</AlertDialogTitle>
+					<AlertDialogDescription>
+						This action cannot be undone. This will permanently delete the entry
+						from the database.
+					</AlertDialogDescription>
+				</AlertDialogHeader>
+				<AlertDialogFooter>
+					<AlertDialogCancel>Cancel</AlertDialogCancel>
+					<AlertDialogAction asChild>
+						<Button
+							variant="destructive"
+							className="text-white"
+							onClick={() => deleteEntry(entry.id as number)}
+						>
+							Delete
+						</Button>
+					</AlertDialogAction>
+				</AlertDialogFooter>
+			</AlertDialogContent>
+		</AlertDialog>
+	);
+});
+
 const EntryCard: FC<{
 	entry: Entry;
 }> = memo(({ entry }) => {
-	const { deleteEntry, setCurrentEntry } = useEntriesActions();
+	const { setCurrentEntry } = useEntriesActions();
 	return (
 		<Card className="hover:shadow-lg transition-shadow duration-200 !rounded-md">
 			<CardHeader>
@@ -107,13 +165,7 @@ const EntryCard: FC<{
 				>
 					Edit
 				</Button>
-				<Button
-					variant="destructive"
-					className="flex-1  sm:grow-0"
-					onClick={() => deleteEntry(entry.id as number)}
-				>
-					Delete
-				</Button>
+				<DeleteDialog entry={entry} />
 			</CardFooter>
 		</Card>
 	);

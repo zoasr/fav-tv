@@ -1,37 +1,37 @@
-import { fromNodeHeaders } from "better-auth/node";
-import { app, PORT } from ".";
-import { auth } from "./auth";
+import { fromNodeHeaders } from 'better-auth/node';
+import { app, PORT } from '.';
+import { auth } from './auth';
 
-app.get("/health", (_, res) => {
+app.get('/health', (_, res) => {
 	res.json({
-		status: "healthy",
+		status: 'healthy',
 		timestamp: new Date().toISOString(),
 		port: PORT,
-		environment: process.env.NODE_ENV || "development",
+		environment: process.env.NODE_ENV || 'development',
 	});
 });
 
-app.get("/debug/cors", (req, res) => {
+app.get('/debug/cors', (req, res) => {
 	res.json({
-		origin: req.get("Origin"),
+		origin: req.get('Origin'),
 		headers: req.headers,
-		cookies: req.get("Cookie"),
+		cookies: req.get('Cookie'),
 		timestamp: new Date().toISOString(),
 	});
 });
 
-const isProduction = process.env.NODE_ENV === "production";
+const isProduction = process.env.NODE_ENV === 'production';
 
-app.get("/debug/session", async (req, res) => {
+app.get('/debug/session', async (req, res) => {
 	try {
 		const headers = fromNodeHeaders(req.headers);
 		const session = await auth.api.getSession({ headers });
 
 		res.json({
-			cookieHeader: req.get("Cookie"),
-			origin: req.get("Origin"),
+			cookieHeader: req.get('Cookie'),
+			origin: req.get('Origin'),
 			isProduction,
-			setCookieHeader: res.getHeaders()["set-cookie"],
+			setCookieHeader: res.getHeaders()['set-cookie'],
 			session: session
 				? {
 						userId: session.user?.id,
@@ -41,14 +41,14 @@ app.get("/debug/session", async (req, res) => {
 					}
 				: null,
 			timestamp: new Date().toISOString(),
-			environment: process.env.NODE_ENV || "development",
+			environment: process.env.NODE_ENV || 'development',
 		});
 	} catch (err) {
 		res.json({
 			// @ts-expect-error
 			error: err.message,
-			cookieHeader: req.get("Cookie"),
-			origin: req.get("Origin"),
+			cookieHeader: req.get('Cookie'),
+			origin: req.get('Origin'),
 			timestamp: new Date().toISOString(),
 		});
 	}

@@ -1,21 +1,21 @@
-import type { Response } from "express";
+import type { Response } from 'express';
 
 // Error Keys System
 export const ERROR_KEYS = {
-	AUTH_REQUIRED: "AUTH_REQUIRED",
-	AUTH_INVALID: "AUTH_INVALID",
-	VALIDATION_FAILED: "VALIDATION_FAILED",
-	NOT_FOUND: "NOT_FOUND",
-	SERVER_ERROR: "SERVER_ERROR",
-	SEARCH_ERROR: "SEARCH_ERROR",
+	AUTH_REQUIRED: 'AUTH_REQUIRED',
+	AUTH_INVALID: 'AUTH_INVALID',
+	VALIDATION_FAILED: 'VALIDATION_FAILED',
+	NOT_FOUND: 'NOT_FOUND',
+	SERVER_ERROR: 'SERVER_ERROR',
+	SEARCH_ERROR: 'SEARCH_ERROR',
 } as const;
 
 export const ERROR_MESSAGES = {
-	[ERROR_KEYS.AUTH_REQUIRED]: "Authentication required",
-	[ERROR_KEYS.AUTH_INVALID]: "Invalid authentication",
-	[ERROR_KEYS.VALIDATION_FAILED]: "Invalid request data",
-	[ERROR_KEYS.NOT_FOUND]: "Resource not found",
-	[ERROR_KEYS.SERVER_ERROR]: "Internal server error",
+	[ERROR_KEYS.AUTH_REQUIRED]: 'Authentication required',
+	[ERROR_KEYS.AUTH_INVALID]: 'Invalid authentication',
+	[ERROR_KEYS.VALIDATION_FAILED]: 'Invalid request data',
+	[ERROR_KEYS.NOT_FOUND]: 'Resource not found',
+	[ERROR_KEYS.SERVER_ERROR]: 'Internal server error',
 	[ERROR_KEYS.SEARCH_ERROR]: "Can't find a movie or tv show",
 };
 
@@ -43,7 +43,7 @@ export class AppError extends Error {
 		public details?: { [key: string]: unknown },
 	) {
 		super(message || ERROR_MESSAGES[errorKey]);
-		this.name = "AppError";
+		this.name = 'AppError';
 	}
 }
 

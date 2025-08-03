@@ -1,24 +1,24 @@
-import { fromNodeHeaders, toNodeHandler } from "better-auth/node";
-import cors from "cors";
-import dotenv from "dotenv";
-import { and, eq, lt } from "drizzle-orm";
+import { fromNodeHeaders, toNodeHandler } from 'better-auth/node';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { and, eq, lt } from 'drizzle-orm';
 import express, {
 	type NextFunction,
 	type Request,
 	type Response,
-} from "express";
+} from 'express';
 import {
 	type Genre,
 	MovieDb,
 	type ProductionCompany,
 	type ShowResponse,
 	type SimplePerson,
-} from "moviedb-promise";
-import { z } from "zod";
-import { auth } from "./auth.js";
-import { db } from "./db/index.js";
-import { entries } from "./db/schema/schema.js";
-import { AppError, sendError } from "./errors/error.js";
+} from 'moviedb-promise';
+import { z } from 'zod';
+import { auth } from './auth.js';
+import { db } from './db/index.js';
+import { entries } from './db/schema/schema.js';
+import { AppError, sendError } from './errors/error.js';
 
 dotenv.config();
 export const app = express();
@@ -30,11 +30,11 @@ if (TMDB_API_KEY) {
 }
 
 type MovieResult = Exclude<
-	Awaited<ReturnType<MovieDb["searchMovie"]>>["results"],
+	Awaited<ReturnType<MovieDb['searchMovie']>>['results'],
 	undefined
 >[number];
 type TVResult = Exclude<
-	Awaited<ReturnType<MovieDb["searchTv"]>>["results"],
+	Awaited<ReturnType<MovieDb['searchTv']>>['results'],
 	undefined
 >[number];
 
@@ -57,8 +57,8 @@ export type SearchResult = (MovieResult | TVResult) & {
 const checkAuth = async (req: Request, res: Response) => {
 	const headers = fromNodeHeaders(req.headers);
 
-	if (!headers.get("cookie") && !headers.get("authorization")) {
-		sendError(res, "AUTH_REQUIRED");
+	if (!headers.get('cookie') && !headers.get('authorization')) {
+		sendError(res, 'AUTH_REQUIRED');
 		return null;
 	}
 
@@ -66,33 +66,33 @@ const checkAuth = async (req: Request, res: Response) => {
 
 	if (!session || !session.user?.id) {
 		// return new AppError("AUTH_INVALID", "Invalid or expired session");
-		sendError(res, "AUTH_INVALID", "Invalid or expired session");
+		sendError(res, 'AUTH_INVALID', 'Invalid or expired session');
 		return null;
 	}
 	return session;
 };
 
 const corsOptions = {
-	origin: ["http://localhost:3000", "https://fav-tv.vercel.app"],
+	origin: ['http://localhost:3000', 'https://fav-tv.vercel.app'],
 	credentials: true,
 };
 
-app.set("trust proxy", 1);
+app.set('trust proxy', 1);
 app.use(cors(corsOptions));
-app.all("/api/auth/*splat", toNodeHandler(auth));
+app.all('/api/auth/*splat', toNodeHandler(auth));
 app.use(express.json());
 
 const EntrySchema = z.object({
-	title: z.string().min(1, "Title is required"),
-	type: z.enum(["Movie", "TV Show"]),
-	director: z.string().min(1, "Director is required"),
+	title: z.string().min(1, 'Title is required'),
+	type: z.enum(['Movie', 'TV Show']),
+	director: z.string().min(1, 'Director is required'),
 	budget: z.string().optional(),
 	location: z.string().optional(),
 	duration: z.string().optional(),
-	yearTime: z.string().min(1, "Year/Time is required"),
+	yearTime: z.string().min(1, 'Year/Time is required'),
 });
 
-app.get("/entries", async (req: Request, res: Response) => {
+app.get('/entries', async (req: Request, res: Response) => {
 	const session = await checkAuth(req, res);
 	if (!session) return;
 	const userId = session.user.id;
@@ -130,17 +130,17 @@ app.get("/entries", async (req: Request, res: Response) => {
 			},
 		});
 	} catch {
-		return sendError(res, "SERVER_ERROR");
+		return sendError(res, 'SERVER_ERROR');
 	}
 });
 
-app.post("/entries", async (req: Request, res: Response) => {
+app.post('/entries', async (req: Request, res: Response) => {
 	const session = await checkAuth(req, res);
 	if (!session) return;
 	const userId = session.user.id;
 	const parsed = EntrySchema.safeParse(req.body);
 	if (!parsed.success) {
-		sendError(res, "VALIDATION_FAILED", parsed.error.message);
+		sendError(res, 'VALIDATION_FAILED', parsed.error.message);
 		return;
 	}
 
@@ -153,27 +153,27 @@ app.post("/entries", async (req: Request, res: Response) => {
 		await db.insert(entries).values(entryData);
 
 		res.status(201).json({
-			message: "Entry created successfully",
+			message: 'Entry created successfully',
 		});
 	} catch {
-		sendError(res, "SERVER_ERROR", "Failed to create entry");
+		sendError(res, 'SERVER_ERROR', 'Failed to create entry');
 		return;
 	}
 });
 
-app.put("/entries/:id", async (req: Request, res: Response) => {
+app.put('/entries/:id', async (req: Request, res: Response) => {
 	const session = await checkAuth(req, res);
 	if (!session) return;
 	const userId = session.user.id;
 	const id = parseInt(req.params.id);
 	if (Number.isNaN(id)) {
-		sendError(res, "VALIDATION_FAILED", "Invalid entry ID");
+		sendError(res, 'VALIDATION_FAILED', 'Invalid entry ID');
 		return;
 	}
 
 	const parsed = EntrySchema.safeParse(req.body);
 	if (!parsed.success) {
-		sendError(res, "VALIDATION_FAILED", parsed.error.message);
+		sendError(res, 'VALIDATION_FAILED', parsed.error.message);
 		return;
 	}
 
@@ -185,7 +185,7 @@ app.put("/entries/:id", async (req: Request, res: Response) => {
 			.limit(1);
 
 		if (!existingEntry) {
-			throw new AppError("NOT_FOUND", "Entry not found");
+			throw new AppError('NOT_FOUND', 'Entry not found');
 		}
 
 		await db
@@ -194,23 +194,23 @@ app.put("/entries/:id", async (req: Request, res: Response) => {
 			.where(and(eq(entries.id, id), eq(entries.userId, userId)));
 
 		res.json({
-			message: "Entry updated successfully",
+			message: 'Entry updated successfully',
 		});
 	} catch (err) {
 		if (err instanceof AppError) {
 			throw err;
 		}
-		throw new AppError("SERVER_ERROR", "Failed to update entry");
+		throw new AppError('SERVER_ERROR', 'Failed to update entry');
 	}
 });
 
-app.delete("/entries/:id", async (req: Request, res: Response) => {
+app.delete('/entries/:id', async (req: Request, res: Response) => {
 	const session = await checkAuth(req, res);
 	if (!session) return;
 	const userId = session.user.id;
 	const id = parseInt(req.params.id);
 	if (Number.isNaN(id)) {
-		sendError(res, "VALIDATION_FAILED", "Invalid entry ID");
+		sendError(res, 'VALIDATION_FAILED', 'Invalid entry ID');
 		return;
 	}
 
@@ -222,7 +222,7 @@ app.delete("/entries/:id", async (req: Request, res: Response) => {
 			.limit(1);
 
 		if (!existingEntry) {
-			throw new AppError("NOT_FOUND", "Entry not found");
+			throw new AppError('NOT_FOUND', 'Entry not found');
 		}
 
 		await db
@@ -231,7 +231,7 @@ app.delete("/entries/:id", async (req: Request, res: Response) => {
 
 		res.status(204).send();
 	} catch {
-		sendError(res, "SERVER_ERROR", "Failed to delete entry");
+		sendError(res, 'SERVER_ERROR', 'Failed to delete entry');
 	}
 });
 
@@ -243,7 +243,7 @@ const getMovieDirector = async (
 	if (!moviedb) return undefined;
 	try {
 		const credits = await moviedb.movieCredits({ id: movieId });
-		const director = credits.crew?.find((person) => person.job === "Director");
+		const director = credits.crew?.find((person) => person.job === 'Director');
 		return director?.name;
 	} catch {
 		return undefined;
@@ -252,13 +252,13 @@ const getMovieDirector = async (
 
 const getTVCreators = (tvShow: ShowResponse): string | undefined => {
 	return (
-		tvShow.created_by?.map((creator) => creator.name).join(", ") || undefined
+		tvShow.created_by?.map((creator) => creator.name).join(', ') || undefined
 	);
 };
 
 const searchTMDB = async (query: string) => {
 	if (!moviedb) {
-		return new AppError("SERVER_ERROR");
+		return new AppError('SERVER_ERROR');
 	}
 
 	try {
@@ -267,13 +267,13 @@ const searchTMDB = async (query: string) => {
 
 		if (!searchData.results?.length) {
 			return new AppError(
-				"SEARCH_ERROR",
+				'SEARCH_ERROR',
 				`Can't find movies or TV shows for with the name: ${query}`,
 			);
 		}
 
 		const filteredResults = searchData.results
-			.filter((result) => !(result.media_type === "person"))
+			.filter((result) => !(result.media_type === 'person'))
 			.sort((a, b) => (b.popularity || 0) - (a.popularity || 0))
 			.slice(0, 10);
 
@@ -283,10 +283,10 @@ const searchTMDB = async (query: string) => {
 					...result,
 					backdrop: config?.images?.poster_sizes
 						? `${config.images.secure_base_url}${config.images.poster_sizes[3]}${result.poster_path || result.backdrop_path}`
-						: "",
+						: '',
 				};
 
-				if (result.media_type === "movie") {
+				if (result.media_type === 'movie') {
 					try {
 						if (!result.id) return baseResult;
 						const movieDetails = await moviedb.movieInfo({ id: result.id });
@@ -305,7 +305,7 @@ const searchTMDB = async (query: string) => {
 						// If detailed fetch fails, return basic result
 						return baseResult;
 					}
-				} else if (result.media_type === "tv") {
+				} else if (result.media_type === 'tv') {
 					try {
 						if (!result.id) return baseResult;
 						const tvDetails = await moviedb.tvInfo({ id: result.id });
@@ -331,8 +331,8 @@ const searchTMDB = async (query: string) => {
 		);
 		return detailedResults;
 	} catch (error) {
-		console.error("TMDB search error:", error);
-		return new AppError("SERVER_ERROR", "Failed to search TMDB");
+		console.error('TMDB search error:', error);
+		return new AppError('SERVER_ERROR', 'Failed to search TMDB');
 	}
 };
 const queryParamsSchema = z.object({
@@ -346,7 +346,7 @@ const validateSearchParams = (schema: z.ZodTypeAny) => {
 		} catch (error) {
 			if (error instanceof z.ZodError) {
 				res.status(400).json({
-					message: "Invalid query parameters",
+					message: 'Invalid query parameters',
 					errors: z.treeifyError(error),
 				});
 			} else {
@@ -357,13 +357,13 @@ const validateSearchParams = (schema: z.ZodTypeAny) => {
 };
 
 app.get(
-	"/moviedb/search",
+	'/moviedb/search',
 	validateSearchParams(queryParamsSchema),
 	async (req: Request, res: Response) => {
-		if (!moviedb) return sendError(res, "SERVER_ERROR");
+		if (!moviedb) return sendError(res, 'SERVER_ERROR');
 		const { query } = req.query;
 		if (!query)
-			return sendError(res, "VALIDATION_FAILED", "query parameter is required");
+			return sendError(res, 'VALIDATION_FAILED', 'query parameter is required');
 		const searchResult = await searchTMDB(query as string);
 		if (searchResult instanceof AppError)
 			return sendError(res, searchResult.errorKey, searchResult.message);
@@ -373,7 +373,7 @@ app.get(
 
 // 404 handler
 app.use((req: Request, res: Response) => {
-	sendError(res, "NOT_FOUND", `Route ${req.originalUrl} not found`);
+	sendError(res, 'NOT_FOUND', `Route ${req.originalUrl} not found`);
 });
 app.listen(PORT, () =>
 	console.log(`Server running on port ${PORT}: http://localhost:${PORT}`),

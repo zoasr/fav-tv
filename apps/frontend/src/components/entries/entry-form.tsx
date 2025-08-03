@@ -23,6 +23,7 @@ import {
 import type { Entry, SearchResult } from '~/lib/api';
 import { useCurrentEntry, useEntriesActions } from '~/stores/entries';
 import { TMDBSearchPopup } from './tmdb-search-popup';
+import { cn } from '~/lib/utils';
 
 interface EntryFormProps {
 	handleDialogClose: () => void;
@@ -131,7 +132,14 @@ export const EntryForm: FC<EntryFormProps> = ({ handleDialogClose }) => {
 						<CardTitle>
 							Fill the form to {currentEntry ? 'edit' : 'add'} the{' '}
 							{currentEntry ? (
-								<em className="text-indigo-600">"{currentEntry?.title}"</em>
+								<em
+									className={cn({
+										'text-indigo-600': currentEntry.type === 'Movie',
+										'text-green-600': currentEntry.type === 'TV Show',
+									})}
+								>
+									"{currentEntry?.title}"
+								</em>
 							) : (
 								' new '
 							)}{' '}

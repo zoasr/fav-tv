@@ -21,9 +21,9 @@ import {
 	SelectValue,
 } from '~/components/ui/select';
 import type { Entry, SearchResult } from '~/lib/api';
+import { cn } from '~/lib/utils';
 import { useCurrentEntry, useEntriesActions } from '~/stores/entries';
 import { TMDBSearchPopup } from './tmdb-search-popup';
-import { cn } from '~/lib/utils';
 
 interface EntryFormProps {
 	handleDialogClose: () => void;

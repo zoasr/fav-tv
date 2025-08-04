@@ -304,7 +304,6 @@ export const EntryForm: FC<EntryFormProps> = ({ handleDialogClose }) => {
 										onBlur={field.handleBlur}
 										onChange={(e) => field.handleChange(e.target.value)}
 										placeholder="e.g., https://image.tmdb.org/t/p/w342/poster_path.jpg"
-										required
 									/>
 								</div>
 							)}

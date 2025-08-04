@@ -41,7 +41,6 @@ const useEntriesStore = create<EntriesStore>((set, get) => ({
 			}
 		},
 		editEntry: async (id, entry) => {
-			console.log(id);
 			const currEntry = get().entries.find((e) => e.id === id);
 			set((state) => ({
 				entries: state.entries.map((e) => (e.id === id ? entry : e)),

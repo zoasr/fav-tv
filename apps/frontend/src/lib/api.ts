@@ -50,7 +50,7 @@ export type TvResult = {
 	original_name?: string;
 };
 export type SearchResult = (MovieResult | TvResult) & {
-	backdrop: string;
+	backdrop: string | null;
 	director?: string;
 	runtime?: number; // in minutes
 	budget?: number;
@@ -82,6 +82,7 @@ export interface Entry {
 	location?: string;
 	duration?: string;
 	yearTime: string;
+	poster?: string;
 }
 
 interface PaginatedResponse<T> {

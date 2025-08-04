@@ -99,74 +99,102 @@ const EntryCard: FC<{
 }> = memo(({ entry }) => {
 	const { setCurrentEntry } = useEntriesActions();
 	return (
-		<Card className="hover:shadow-lg transition-shadow duration-200 !rounded-md">
-			<CardHeader>
-				<div className="flex items-center justify-between">
-					<CardTitle className="flex items-center gap-2">
-						{entry.type === 'Movie' ? (
-							<Film className="h-6 w-6 text-indigo-600" />
-						) : (
-							<Tv className="h-6 w-6 text-green-600" />
-						)}
-						{entry.title}
-					</CardTitle>
-					<span
-						className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold leading-5 ${entry.type === 'Movie' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}
-					>
-						{entry.type}
-					</span>
+		<Card
+			className={cn(
+				'hover:shadow-lg transition-shadow duration-200 !rounded-md',
+				{
+					'flex flex-col sm:flex-row justify-between sm:max-h-[300px]':
+						!!entry.poster,
+				},
+			)}
+		>
+			{!!entry.poster && (
+				<div className="block rounded-md overflow-clip w-full max-h-fit sm:max-h-full sm:w-1/3 sm:rounded-r-none rounded-b-none relative isolate">
+					<img
+						src={entry.poster}
+						alt={`${entry.title} blurred backdrop`}
+						className="h-full max-h-full object-cover w-full block blur absolute inset-0 z-0"
+					/>
+					<img
+						src={entry.poster}
+						alt={entry.title}
+						className="h-full max-h-full object-contain w-full sm:w-fit mx-auto block relative sm:mask-x-from-90% sm:mask-x-to-100%"
+					/>
 				</div>
-			</CardHeader>
-			<CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-muted-foreground">
-				<div className="flex items-center gap-2">
-					<User className="h-4 w-4 text-muted-foreground" />
-					<span>
-						<strong>Director:</strong> {entry.director}
-					</span>
-				</div>
-				{entry.yearTime && (
-					<div className="flex items-center gap-2">
-						<Calendar className="h-4 w-4 text-muted-foreground" />
-						<span>
-							<strong>Year:</strong> {entry.yearTime}
+			)}
+			<div className="flex flex-col justify-between flex-1">
+				<CardHeader>
+					<div className="flex items-center justify-between">
+						<CardTitle className="flex items-center gap-2">
+							{entry.type === 'Movie' ? (
+								<Film className="h-6 w-6 text-indigo-600" />
+							) : (
+								<Tv className="h-6 w-6 text-green-600" />
+							)}
+							{entry.title}
+						</CardTitle>
+						<span
+							className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold leading-5 ${entry.type === 'Movie' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}
+						>
+							{entry.type}
 						</span>
 					</div>
-				)}
-				{entry.budget && (
-					<div className="flex items-center gap-2">
-						<DollarSign className="h-4 w-4 text-muted-foreground" />
-						<span>
-							<strong>Budget:</strong> {entry.budget}
-						</span>
-					</div>
-				)}
-				{entry.location && (
-					<div className="flex items-center gap-2">
-						<MapPin className="h-4 w-4 text-muted-foreground" />
-						<span>
-							<strong>Location:</strong> {entry.location}
-						</span>
-					</div>
-				)}
-				{entry.duration && (
-					<div className="flex items-center gap-2">
-						<Clock className="h-4 w-4 text-gray-500" />
-						<span>
-							<strong>Duration:</strong> {entry.duration}
-						</span>
-					</div>
-				)}
-			</CardContent>
-			<CardFooter className="flex justify-end space-x-2 bg-muted/50 py-3 px-6 rounded-md">
-				<Button
-					variant="ghost"
-					className="flex-1  sm:grow-0"
-					onClick={() => setCurrentEntry(entry.id as number)}
+				</CardHeader>
+				<CardContent
+					className={cn(
+						'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-muted-foreground',
+					)}
 				>
-					Edit
-				</Button>
-				<DeleteDialog entry={entry} />
-			</CardFooter>
+					<div className="flex items-center gap-2">
+						<User className="h-4 w-4 text-muted-foreground" />
+						<span>
+							<strong>Director:</strong> {entry.director}
+						</span>
+					</div>
+					{entry.yearTime && (
+						<div className="flex items-center gap-2">
+							<Calendar className="h-4 w-4 text-muted-foreground" />
+							<span>
+								<strong>Year:</strong> {entry.yearTime}
+							</span>
+						</div>
+					)}
+					{entry.budget && (
+						<div className="flex items-center gap-2">
+							<DollarSign className="h-4 w-4 text-muted-foreground" />
+							<span>
+								<strong>Budget:</strong> {entry.budget}
+							</span>
+						</div>
+					)}
+					{entry.location && (
+						<div className="flex items-center gap-2">
+							<MapPin className="h-4 w-4 text-muted-foreground" />
+							<span>
+								<strong>Location:</strong> {entry.location}
+							</span>
+						</div>
+					)}
+					{entry.duration && (
+						<div className="flex items-center gap-2">
+							<Clock className="h-4 w-4 text-gray-500" />
+							<span>
+								<strong>Duration:</strong> {entry.duration}
+							</span>
+						</div>
+					)}
+				</CardContent>
+				<CardFooter className="flex justify-end space-x-2 bg-muted/50 py-3 px-6 rounded-md">
+					<Button
+						variant="ghost"
+						className="flex-1  sm:grow-0"
+						onClick={() => setCurrentEntry(entry.id as number)}
+					>
+						Edit
+					</Button>
+					<DeleteDialog entry={entry} />
+				</CardFooter>
+			</div>
 		</Card>
 	);
 });

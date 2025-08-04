@@ -44,6 +44,7 @@ export const EntryForm: FC<EntryFormProps> = ({ handleDialogClose }) => {
 			location: currentEntry?.location || '',
 			duration: currentEntry?.duration || '',
 			yearTime: currentEntry?.yearTime || '',
+			poster: currentEntry?.poster || '',
 		} as Omit<Entry, 'id' | 'userId'>,
 		onSubmit: async ({ value }) => {
 			if (currentEntry) {
@@ -114,6 +115,10 @@ export const EntryForm: FC<EntryFormProps> = ({ handleDialogClose }) => {
 				? ` (${result.number_of_seasons} seasons)`
 				: '';
 			form.setFieldValue('duration', `${avgRuntime} min/ep${seasonInfo}`);
+		}
+
+		if (result.backdrop) {
+			form.setFieldValue('poster', result.backdrop);
 		}
 	};
 
@@ -271,7 +276,7 @@ export const EntryForm: FC<EntryFormProps> = ({ handleDialogClose }) => {
 						<form.Field
 							name="yearTime"
 							children={(field) => (
-								<div className="space-y-2 md:col-span-2">
+								<div className="space-y-2 ">
 									<Label htmlFor={field.name}>
 										Year/Time <span className="text-red-500">*</span>
 									</Label>
@@ -282,6 +287,23 @@ export const EntryForm: FC<EntryFormProps> = ({ handleDialogClose }) => {
 										onBlur={field.handleBlur}
 										onChange={(e) => field.handleChange(e.target.value)}
 										placeholder="e.g., 2023, 2020-2023, Summer 2023"
+										required
+									/>
+								</div>
+							)}
+						/>
+						<form.Field
+							name="poster"
+							children={(field) => (
+								<div className="space-y-2 ">
+									<Label htmlFor={field.name}>Poster Image url</Label>
+									<Input
+										id={field.name}
+										name={field.name}
+										value={field.state.value}
+										onBlur={field.handleBlur}
+										onChange={(e) => field.handleChange(e.target.value)}
+										placeholder="e.g., https://image.tmdb.org/t/p/w342/poster_path.jpg"
 										required
 									/>
 								</div>

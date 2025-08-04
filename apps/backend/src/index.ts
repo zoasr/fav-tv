@@ -40,7 +40,7 @@ type TVResult = Exclude<
 
 // Enhanced SearchResult with detailed information for form filling
 export type SearchResult = (MovieResult | TVResult) & {
-	backdrop: string;
+	backdrop: string | null;
 	// Additional fields for form auto-fill
 	director?: string;
 	runtime?: number; // in minutes
@@ -283,9 +283,11 @@ const searchTMDB = async (query: string) => {
 			filteredResults.map(async (result): Promise<SearchResult> => {
 				const baseResult = {
 					...result,
-					backdrop: config?.images?.poster_sizes
-						? `${config.images.secure_base_url}${config.images.poster_sizes[3]}${result.poster_path || result.backdrop_path}`
-						: '',
+					backdrop:
+						config?.images?.poster_sizes &&
+						(result.backdrop_path || result.poster_path)
+							? `${config.images.secure_base_url}${config.images.poster_sizes[4]}${result.poster_path || result.backdrop_path}`
+							: null,
 				};
 
 				if (result.media_type === 'movie') {

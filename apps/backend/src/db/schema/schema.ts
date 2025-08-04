@@ -10,6 +10,7 @@ export const entries = mysqlTable('entries', {
 	location: varchar('location', { length: 255 }),
 	duration: varchar('duration', { length: 255 }),
 	yearTime: varchar('yearTime', { length: 64 }).notNull(),
+	poster: varchar('poster', { length: 255 }),
 	userId: varchar('user_id', { length: 36 })
 		.notNull()
 		.references(() => user.id, { onDelete: 'cascade' }),

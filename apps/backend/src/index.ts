@@ -90,6 +90,7 @@ const EntrySchema = z.object({
 	location: z.string().optional(),
 	duration: z.string().optional(),
 	yearTime: z.string().min(1, 'Year/Time is required'),
+	poster: z.string().optional(),
 });
 
 app.get('/entries', async (req: Request, res: Response) => {
@@ -110,6 +111,7 @@ app.get('/entries', async (req: Request, res: Response) => {
 				location: entries.location,
 				duration: entries.duration,
 				yearTime: entries.yearTime,
+				poster: entries.poster,
 			})
 			.from(entries)
 			.where(and(eq(entries.userId, userId), lt(entries.id, cursor)))

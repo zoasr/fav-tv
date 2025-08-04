@@ -1,0 +1,1 @@
+ALTER TABLE `entries` ADD `poster` varchar(255);

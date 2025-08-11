@@ -3,6 +3,7 @@ import { useForm } from '@tanstack/react-form';
 import { useQueryClient } from '@tanstack/react-query';
 import { Search } from 'lucide-react';
 import { type FC, useState } from 'react';
+import { type ZodError, z } from 'zod/v4';
 import { Button } from '~/components/ui/button';
 import {
 	Card,
@@ -29,6 +30,26 @@ interface EntryFormProps {
 	handleDialogClose: () => void;
 }
 
+const FormSchema = z.object({
+	title: z.string().min(1, 'Title is required'),
+	type: z.enum(['Movie', 'TV Show']),
+	director: z.string().min(1, 'Director is required'),
+	budget: z.string().optional(),
+	location: z.string().optional(),
+	duration: z.string().optional(),
+	yearTime: z.string().min(1, 'Year/Time is required'),
+	poster: z.string().optional(),
+});
+
+const FormErrorDisplay = ({ field }: { field: any }) => {
+	return (
+		<em className="text-xs text-red-600 font-bold">
+			{field.state.meta.isTouched &&
+				field.state.meta.errors.map((e: ZodError) => e?.message)}
+		</em>
+	);
+};
+
 export const EntryForm: FC<EntryFormProps> = ({ handleDialogClose }) => {
 	const currentEntry = useCurrentEntry();
 	const { editEntry, addEntry } = useEntriesActions();
@@ -46,6 +67,10 @@ export const EntryForm: FC<EntryFormProps> = ({ handleDialogClose }) => {
 			yearTime: currentEntry?.yearTime || '',
 			poster: currentEntry?.poster || '',
 		} as Omit<Entry, 'id' | 'userId'>,
+		validators: {
+			onChange: FormSchema,
+			onSubmit: FormSchema,
+		},
 		onSubmit: async ({ value }) => {
 			if (currentEntry) {
 				await editEntry(currentEntry.id as number, {
@@ -181,6 +206,7 @@ export const EntryForm: FC<EntryFormProps> = ({ handleDialogClose }) => {
 										required
 										placeholder="Enter title or search TMDB..."
 									/>
+									<FormErrorDisplay field={field} />
 								</div>
 							)}
 						/>
@@ -224,6 +250,7 @@ export const EntryForm: FC<EntryFormProps> = ({ handleDialogClose }) => {
 										onChange={(e) => field.handleChange(e.target.value)}
 										required
 									/>
+									<FormErrorDisplay field={field} />
 								</div>
 							)}
 						/>
@@ -289,6 +316,7 @@ export const EntryForm: FC<EntryFormProps> = ({ handleDialogClose }) => {
 										placeholder="e.g., 2023, 2020-2023, Summer 2023"
 										required
 									/>
+									<FormErrorDisplay field={field} />
 								</div>
 							)}
 						/>

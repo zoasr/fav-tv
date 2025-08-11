@@ -38,6 +38,7 @@ function SignUpComponent() {
 		});
 		if (res.error) {
 			setError(res.error.message);
+			setIsSubmitting(false);
 		} else {
 			setError(null);
 			setIsSubmitting(false);
@@ -82,7 +83,7 @@ function SignUpComponent() {
 							/>
 						</Button>
 						<p
-							className="text-red-500 text-center font-bold grid data-[shown=true]:grid-rows-1 grid-rows-0 transition-all duration-300 ease-in-out"
+							className="text-red-500 text-center font-bold grid data-[shown=true]:grid-rows-1 data-[shown=false]:sr-only grid-rows-0 transition-all duration-300 ease-in-out bg-red-500/20 rounded-md p-2"
 							data-shown={!!error}
 						>
 							{error}

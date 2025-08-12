@@ -57,6 +57,8 @@ Create `apps/backend/.env`:
 ```env
 BETTER_AUTH_SECRET="your-32-character-secret-key-here"
 BETTER_AUTH_URL="http://localhost:3241"
+TMDB_ACCESS_TOKEN="[YOUR_ACCESS_TOKEN]"
+TMDB_API_KEY="[YOUR_API_KEY]"
 DATABASE_URL="mysql://user:password@host:port/database"
 PORT=3241
 ```

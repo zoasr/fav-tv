@@ -54,7 +54,11 @@ const DeleteDialog = memo(({ entry }: { entry: Entry }) => {
 	return (
 		<AlertDialog>
 			<AlertDialogTrigger asChild>
-				<Button variant="destructive" className="flex-1 sm:grow-0">
+				<Button
+					variant="destructive"
+					size="sm"
+					className="w-full md:w-auto md:min-w-[72px]"
+				>
 					Delete
 				</Button>
 			</AlertDialogTrigger>
@@ -101,10 +105,9 @@ const EntryCard: FC<{
 	return (
 		<Card
 			className={cn(
-				'hover:shadow-lg transition-shadow duration-200 !rounded-md',
+				'hover:shadow-lg transition-shadow duration-200 !rounded-md max-h-[350px]',
 				{
-					'flex flex-col sm:flex-row justify-between sm:max-h-[300px]':
-						!!entry.poster,
+					'flex flex-col sm:flex-row justify-between': !!entry.poster,
 				},
 			)}
 		>
@@ -185,10 +188,11 @@ const EntryCard: FC<{
 						</div>
 					)}
 				</CardContent>
-				<CardFooter className="flex justify-end space-x-2 bg-muted/50 py-3 px-6 rounded-md">
+				<CardFooter className="flex flex-col md:flex-row gap-2 md:justify-end bg-muted/50 py-2 px-3 rounded-md">
 					<Button
 						variant="ghost"
-						className="flex-1 sm:grow-0"
+						size="sm"
+						className="w-full md:w-auto md:min-w-[72px]"
 						onClick={() => setCurrentEntry(entry.id as number)}
 						aria-label={`Edit ${entry.title}`}
 					>

@@ -2,8 +2,8 @@
 import { useForm } from '@tanstack/react-form';
 import { useQueryClient } from '@tanstack/react-query';
 import { Search } from 'lucide-react';
-import { type FC, useState } from 'react';
-import { type ZodError, z } from 'zod/v4';
+import { type FC, useRef, useState } from 'react';
+import { z } from 'zod/v4';
 import { Button } from '~/components/ui/button';
 import {
 	Card,
@@ -42,11 +42,15 @@ const FormSchema = z.object({
 });
 
 const FormErrorDisplay = ({ field }: { field: any }) => {
+	const errors = field.state.meta.errors;
+	if (!field.state.meta.isTouched || !errors.length) return null;
+
 	return (
-		<em className="text-xs text-red-600 font-bold">
-			{field.state.meta.isTouched &&
-				field.state.meta.errors.map((e: ZodError) => e?.message)}
-		</em>
+		<div role="alert" className="text-xs text-red-600 font-bold mt-1">
+			{errors.map((error: any) => (
+				<div key={crypto.randomUUID()}>{error?.message || 'Invalid input'}</div>
+			))}
+		</div>
 	);
 };
 
@@ -55,6 +59,8 @@ export const EntryForm: FC<EntryFormProps> = ({ handleDialogClose }) => {
 	const { editEntry, addEntry } = useEntriesActions();
 	const queryClient = useQueryClient();
 	const [isSearchOpen, setIsSearchOpen] = useState(false);
+	const [isSubmitting, setIsSubmitting] = useState(false);
+	const formRef = useRef<HTMLFormElement>(null);
 
 	const form = useForm({
 		defaultValues: {
@@ -72,16 +78,22 @@ export const EntryForm: FC<EntryFormProps> = ({ handleDialogClose }) => {
 			onSubmit: FormSchema,
 		},
 		onSubmit: async ({ value }) => {
-			if (currentEntry) {
-				await editEntry(currentEntry.id as number, {
-					id: currentEntry.id,
-					...value,
-				});
+			setIsSubmitting(true);
+			try {
+				if (currentEntry) {
+					await editEntry(currentEntry.id as number, {
+						id: currentEntry.id,
+						...value,
+					});
+				} else {
+					await addEntry(value);
+					queryClient.invalidateQueries({ queryKey: ['entries'] });
+				}
 				handleDialogClose();
-			} else {
-				await addEntry(value);
-				queryClient.invalidateQueries({ queryKey: ['entries'] });
-				handleDialogClose();
+			} catch (error) {
+				console.error('Form submission error:', error);
+			} finally {
+				setIsSubmitting(false);
 			}
 		},
 	});
@@ -95,27 +107,22 @@ export const EntryForm: FC<EntryFormProps> = ({ handleDialogClose }) => {
 				? result.release_date
 				: result.first_air_date;
 
-		// Auto-fill form fields with TMDB data
 		form.setFieldValue('title', title || '');
 		form.setFieldValue('type', type);
 
-		// Set year from release/air date
 		if (year) {
 			const yearOnly = new Date(year).getFullYear().toString();
 			form.setFieldValue('yearTime', yearOnly);
 		}
 
-		// Set director (for movies) or creators (for TV shows)
 		if (result.director) {
 			form.setFieldValue('director', result.director);
 		}
 
-		// Set budget for movies (if available and greater than 0)
 		if (result.media_type === 'movie' && result.budget && result.budget > 0) {
 			form.setFieldValue('budget', `$${result.budget.toLocaleString()}`);
 		}
 
-		// Set location based on production countries
 		if (result.production_countries && result.production_countries.length > 0) {
 			const countries = result.production_countries
 				.map((country) => country.name)
@@ -123,7 +130,6 @@ export const EntryForm: FC<EntryFormProps> = ({ handleDialogClose }) => {
 			form.setFieldValue('location', countries);
 		}
 
-		// Set duration based on media type
 		if (result.media_type === 'movie' && result.runtime) {
 			form.setFieldValue('duration', `${result.runtime} min`);
 		} else if (
@@ -131,7 +137,6 @@ export const EntryForm: FC<EntryFormProps> = ({ handleDialogClose }) => {
 			result.episode_run_time &&
 			result.episode_run_time.length > 0
 		) {
-			// Calculate average episode runtime for TV shows
 			const avgRuntime = Math.round(
 				result.episode_run_time.reduce((a, b) => a + b, 0) /
 					result.episode_run_time.length,
@@ -150,12 +155,14 @@ export const EntryForm: FC<EntryFormProps> = ({ handleDialogClose }) => {
 	return (
 		<>
 			<form
+				ref={formRef}
 				onSubmit={(e) => {
 					e.preventDefault();
 					e.stopPropagation();
 					form.handleSubmit();
 				}}
 				className="contents"
+				noValidate
 			>
 				<Card className="w-full max-w-2xl mx-auto overflow-auto ">
 					<CardHeader>
@@ -205,8 +212,24 @@ export const EntryForm: FC<EntryFormProps> = ({ handleDialogClose }) => {
 										onChange={(e) => field.handleChange(e.target.value)}
 										required
 										placeholder="Enter title or search TMDB..."
+										aria-describedby={
+											field.state.meta.errors.length
+												? `${field.name}-error`
+												: undefined
+										}
+										className={
+											field.state.meta.errors.length &&
+											field.state.meta.isTouched
+												? 'border-red-500 focus:border-red-500'
+												: ''
+										}
 									/>
-									<FormErrorDisplay field={field} />
+									{field.state.meta.errors.length > 0 &&
+										field.state.meta.isTouched && (
+											<div id={`${field.name}-error`}>
+												<FormErrorDisplay field={field} />
+											</div>
+										)}
 								</div>
 							)}
 						/>
@@ -249,8 +272,24 @@ export const EntryForm: FC<EntryFormProps> = ({ handleDialogClose }) => {
 										onBlur={field.handleBlur}
 										onChange={(e) => field.handleChange(e.target.value)}
 										required
+										aria-describedby={
+											field.state.meta.errors.length
+												? `${field.name}-error`
+												: undefined
+										}
+										className={
+											field.state.meta.errors.length &&
+											field.state.meta.isTouched
+												? 'border-red-500 focus:border-red-500'
+												: ''
+										}
 									/>
-									<FormErrorDisplay field={field} />
+									{field.state.meta.errors.length > 0 &&
+										field.state.meta.isTouched && (
+											<div id={`${field.name}-error`}>
+												<FormErrorDisplay field={field} />
+											</div>
+										)}
 								</div>
 							)}
 						/>
@@ -315,8 +354,24 @@ export const EntryForm: FC<EntryFormProps> = ({ handleDialogClose }) => {
 										onChange={(e) => field.handleChange(e.target.value)}
 										placeholder="e.g., 2023, 2020-2023, Summer 2023"
 										required
+										aria-describedby={
+											field.state.meta.errors.length
+												? `${field.name}-error`
+												: undefined
+										}
+										className={
+											field.state.meta.errors.length &&
+											field.state.meta.isTouched
+												? 'border-red-500 focus:border-red-500'
+												: ''
+										}
 									/>
-									<FormErrorDisplay field={field} />
+									{field.state.meta.errors.length > 0 &&
+										field.state.meta.isTouched && (
+											<div id={`${field.name}-error`}>
+												<FormErrorDisplay field={field} />
+											</div>
+										)}
 								</div>
 							)}
 						/>
@@ -339,20 +394,43 @@ export const EntryForm: FC<EntryFormProps> = ({ handleDialogClose }) => {
 					</CardContent>
 					<CardFooter className="flex justify-end space-x-3 pt-6">
 						<form.Subscribe
-							selector={(state) => [state.canSubmit, state.isSubmitting]}
-							children={([canSubmit, isSubmitting]) => (
+							selector={(state) => [
+								state.canSubmit,
+								state.isSubmitting,
+								state.isValid,
+							]}
+							children={([canSubmit, formIsSubmitting, isValid]) => (
 								<>
 									<Button
 										type="button"
 										variant="outline"
 										onClick={handleDialogClose}
-										disabled={isSubmitting}
+										disabled={isSubmitting || formIsSubmitting}
 									>
 										Cancel
 									</Button>
-									<Button type="submit" disabled={!canSubmit || isSubmitting}>
-										{isSubmitting ? 'Saving...' : 'Save'}
+									<Button
+										type="submit"
+										disabled={
+											!canSubmit || isSubmitting || formIsSubmitting || !isValid
+										}
+										aria-describedby="submit-button-status"
+									>
+										{isSubmitting || formIsSubmitting ? (
+											<>
+												<div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2" />
+												Saving...
+											</>
+										) : currentEntry ? (
+											'Update Entry'
+										) : (
+											'Add Entry'
+										)}
 									</Button>
+									<div id="submit-button-status" className="sr-only">
+										{!isValid &&
+											'Please fix the errors above to submit the form'}
+									</div>
 								</>
 							)}
 						/>

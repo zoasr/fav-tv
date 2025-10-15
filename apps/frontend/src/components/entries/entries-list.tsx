@@ -134,7 +134,8 @@ const EntryCard: FC<{
 							{entry.title}
 						</CardTitle>
 						<span
-							className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold leading-5 ${entry.type === 'Movie' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}
+							className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold leading-5 ${entry.type === 'Movie' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'}`}
+							title={`Content type: ${entry.type}`}
 						>
 							{entry.type}
 						</span>
@@ -187,8 +188,9 @@ const EntryCard: FC<{
 				<CardFooter className="flex justify-end space-x-2 bg-muted/50 py-3 px-6 rounded-md">
 					<Button
 						variant="ghost"
-						className="flex-1  sm:grow-0"
+						className="flex-1 sm:grow-0"
 						onClick={() => setCurrentEntry(entry.id as number)}
+						aria-label={`Edit ${entry.title}`}
 					>
 						Edit
 					</Button>
@@ -218,7 +220,10 @@ export const EntriesList: FC<EntriesListProps> = ({ search = '' }) => {
 	const filteredEntries = useMemo(
 		() =>
 			entries.filter((entry) => {
-				const term = search.toLowerCase();
+				if (!search) return true;
+				const term = search.toLowerCase().trim();
+				if (term === '') return true;
+
 				return (
 					entry.title.toLowerCase().includes(term) ||
 					entry.director.toLowerCase().includes(term) ||
@@ -228,14 +233,6 @@ export const EntriesList: FC<EntriesListProps> = ({ search = '' }) => {
 				);
 			}),
 		[entries, search],
-	);
-
-	const filteredEntriesEls = useMemo(
-		() =>
-			filteredEntries?.map((entry) => (
-				<EntryCard key={entry.id} entry={entry} />
-			)),
-		[filteredEntries],
 	);
 
 	const handleDialogClose = useCallback(
@@ -279,13 +276,29 @@ export const EntriesList: FC<EntriesListProps> = ({ search = '' }) => {
 	return (
 		<div className="space-y-4">
 			{filteredEntries?.length ? (
-				filteredEntriesEls
+				<>
+					<div className="sr-only" aria-live="polite" aria-atomic="true">
+						{search
+							? `Found ${filteredEntries.length} ${filteredEntries.length === 1 ? 'entry' : 'entries'} matching "${search}"`
+							: `Showing ${filteredEntries.length} ${filteredEntries.length === 1 ? 'entry' : 'entries'}`}
+					</div>
+					{filteredEntries.map((entry) => (
+						<EntryCard key={entry.id} entry={entry} />
+					))}
+				</>
 			) : (
-				<div className="text-center py-12">
+				<output className="text-center py-12" aria-live="polite">
 					<h3 className="mt-2 text-sm font-medium text-muted-foreground">
-						No entries or search results
+						{search
+							? `No entries found matching "${search}"`
+							: 'No entries found'}
 					</h3>
-				</div>
+					{search && (
+						<p className="mt-1 text-xs text-muted-foreground">
+							Try adjusting your search terms or add a new entry.
+						</p>
+					)}
+				</output>
 			)}
 
 			<Dialog open={!!currentEntry} onOpenChange={handleDialogClose}>

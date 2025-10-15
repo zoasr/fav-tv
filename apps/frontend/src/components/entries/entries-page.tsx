@@ -1,3 +1,4 @@
+import { X } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { Button } from '~/components/ui/button';
 import {
@@ -8,6 +9,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from '~/components/ui/dialog';
+import { useDebounce } from '~/hooks/useDebounce';
 import { Input } from '../ui/input';
 import { EntriesList } from './entries-list';
 import { EntryForm } from './entry-form';
@@ -15,9 +17,14 @@ import { EntryForm } from './entry-form';
 export function EntriesPage() {
 	const [isFormOpen, setIsFormOpen] = useState(false);
 	const [search, setSearch] = useState('');
+	const debouncedSearch = useDebounce(search, 300);
 
 	const handleDialogClose = useCallback(() => {
 		setIsFormOpen(false);
+	}, []);
+
+	const handleSearchClear = useCallback(() => {
+		setSearch('');
 	}, []);
 
 	return (
@@ -51,17 +58,30 @@ export function EntriesPage() {
 				</div>
 			</div>
 
-			<div className="mt-4">
+			<div className="mt-4 relative">
 				<Input
 					type="text"
 					placeholder="Search by title, director, year, or location..."
 					value={search}
 					onChange={(e) => setSearch(e.target.value)}
+					className="pr-10"
+					aria-label="Search entries"
 				/>
+				{search && (
+					<Button
+						variant="ghost"
+						size="sm"
+						onClick={handleSearchClear}
+						className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-muted"
+						aria-label="Clear search"
+					>
+						<X className="h-4 w-4" />
+					</Button>
+				)}
 			</div>
 
 			<div className="mt-8">
-				<EntriesList search={search} />
+				<EntriesList search={debouncedSearch} />
 			</div>
 		</div>
 	);

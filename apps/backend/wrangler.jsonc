@@ -1,0 +1,15 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "fav-tv-api",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-08-04",
+	// Better Auth needs AsyncLocalStorage; this also gives axios a working
+	// fetch adapter on the Workers runtime.
+	"compatibility_flags": ["nodejs_compat"],
+	"observability": {
+		"enabled": true,
+	},
+	"vars": {
+		"NODE_ENV": "production",
+	},
+}

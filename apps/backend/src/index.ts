@@ -1,12 +1,6 @@
-import { fromNodeHeaders, toNodeHandler } from 'better-auth/node';
-import cors from 'cors';
-import dotenv from 'dotenv';
 import { and, eq, lt } from 'drizzle-orm';
-import express, {
-	type NextFunction,
-	type Request,
-	type Response,
-} from 'express';
+import { type Context, Hono } from 'hono';
+import { cors } from 'hono/cors';
 import {
 	type Genre,
 	MovieDb,
@@ -20,13 +14,9 @@ import { db } from './db/index';
 import { entries } from './db/schema/schema';
 import { AppError, sendError } from './errors/error';
 
-dotenv.config();
-export const app = express();
-export const PORT = process.env.PORT || 3241;
-const TMDB_API_KEY = process.env.TMDB_API_KEY;
 let moviedb: MovieDb | undefined;
-if (TMDB_API_KEY) {
-	moviedb = new MovieDb(TMDB_API_KEY);
+if (process.env.TMDB_API_KEY) {
+	moviedb = new MovieDb(process.env.TMDB_API_KEY);
 }
 
 type MovieResult = Exclude<
@@ -54,33 +44,40 @@ export type SearchResult = (MovieResult | TVResult) & {
 	created_by?: SimplePerson[];
 };
 
-const checkAuth = async (req: Request, res: Response) => {
-	const headers = fromNodeHeaders(req.headers);
-
-	if (!headers.get('cookie') && !headers.get('authorization')) {
-		sendError(res, 'AUTH_REQUIRED');
-		return null;
-	}
-
-	const session = await auth.api.getSession({ headers });
-
-	if (!session || !session.user?.id) {
-		// return new AppError("AUTH_INVALID", "Invalid or expired session");
-		sendError(res, 'AUTH_INVALID', 'Invalid or expired session');
-		return null;
-	}
-	return session;
-};
-
 const corsOptions = {
-	origin: ['http://localhost:3000', 'https://fav-tv.vercel.app'],
+	origin: [
+		'http://localhost:3000',
+		'https://fav-tv.vercel.app',
+		process.env.BETTER_AUTH_URL,
+	].filter(Boolean) as string[],
 	credentials: true,
 };
 
-app.set('trust proxy', 1);
-app.use(cors(corsOptions));
-app.all('/api/auth/*splat', toNodeHandler(auth));
-app.use(express.json());
+const app = new Hono().use('*', cors(corsOptions));
+
+// better-auth reads Web Standard Request/Response directly, so it mounts
+// without an adapter. Registered before any other route.
+app.all('/api/auth/*', (c) => auth.handler(c.req.raw));
+
+type Session = typeof auth.$Infer.Session;
+
+type Authed = { session: Session; error?: never };
+type Unauthed = { session?: never; error: Response };
+
+const requireSession = async (c: Context): Promise<Authed | Unauthed> => {
+	const headers = c.req.raw.headers;
+	if (!headers.get('cookie') && !headers.get('authorization')) {
+		return { error: sendError(c, 'AUTH_REQUIRED') };
+	}
+
+	const session = await auth.api.getSession({ headers });
+	if (!session?.user?.id) {
+		return {
+			error: sendError(c, 'AUTH_INVALID', 'Invalid or expired session'),
+		};
+	}
+	return { session };
+};
 
 const EntrySchema = z.object({
 	title: z.string().min(1, 'Title is required'),
@@ -93,13 +90,14 @@ const EntrySchema = z.object({
 	poster: z.string().optional(),
 });
 
-app.get('/entries', async (req: Request, res: Response) => {
-	const session = await checkAuth(req, res);
-	if (!session) return;
-	const userId = session.user.id;
+app.get('/entries', async (c) => {
+	const authed = await requireSession(c);
+	if ('error' in authed) return authed.error;
+	const userId = authed.session.user.id;
 	// ponytail: int4 max — Postgres binds this param as `integer` (column type),
 	// so a Date.now() sentinel overflows. serial ids can't exceed it anyway.
-	const cursor = parseInt(req.query.cursor as string) || 2_147_483_647;
+	const cursor =
+		Number.parseInt(c.req.query('cursor') ?? '', 10) || 2_147_483_647;
 	const limit = 20;
 
 	try {
@@ -126,7 +124,7 @@ app.get('/entries', async (req: Request, res: Response) => {
 			? entriesToReturn[entriesToReturn.length - 1]?.id
 			: null;
 
-		res.json({
+		return c.json({
 			entries: entriesToReturn,
 			pagination: {
 				nextCursor,
@@ -134,51 +132,41 @@ app.get('/entries', async (req: Request, res: Response) => {
 			},
 		});
 	} catch {
-		return sendError(res, 'SERVER_ERROR');
+		return sendError(c, 'SERVER_ERROR');
 	}
 });
 
-app.post('/entries', async (req: Request, res: Response) => {
-	const session = await checkAuth(req, res);
-	if (!session) return;
-	const userId = session.user.id;
-	const parsed = EntrySchema.safeParse(req.body);
+app.post('/entries', async (c) => {
+	const authed = await requireSession(c);
+	if ('error' in authed) return authed.error;
+	const userId = authed.session.user.id;
+
+	const parsed = EntrySchema.safeParse(await c.req.json());
 	if (!parsed.success) {
-		sendError(res, 'VALIDATION_FAILED', parsed.error.message);
-		return;
+		return sendError(c, 'VALIDATION_FAILED', parsed.error.message);
 	}
 
 	try {
-		const entryData = {
-			...parsed.data,
-			userId: userId,
-		};
-
-		await db.insert(entries).values(entryData);
-
-		res.status(201).json({
-			message: 'Entry created successfully',
-		});
+		await db.insert(entries).values({ ...parsed.data, userId });
+		return c.json({ message: 'Entry created successfully' }, 201);
 	} catch {
-		sendError(res, 'SERVER_ERROR', 'Failed to create entry');
-		return;
+		return sendError(c, 'SERVER_ERROR', 'Failed to create entry');
 	}
 });
 
-app.put('/entries/:id', async (req: Request, res: Response) => {
-	const session = await checkAuth(req, res);
-	if (!session) return;
-	const userId = session.user.id;
-	const id = parseInt(req.params.id);
+app.put('/entries/:id', async (c) => {
+	const authed = await requireSession(c);
+	if ('error' in authed) return authed.error;
+	const userId = authed.session.user.id;
+
+	const id = Number.parseInt(c.req.param('id'), 10);
 	if (Number.isNaN(id)) {
-		sendError(res, 'VALIDATION_FAILED', 'Invalid entry ID');
-		return;
+		return sendError(c, 'VALIDATION_FAILED', 'Invalid entry ID');
 	}
 
-	const parsed = EntrySchema.safeParse(req.body);
+	const parsed = EntrySchema.safeParse(await c.req.json());
 	if (!parsed.success) {
-		sendError(res, 'VALIDATION_FAILED', parsed.error.message);
-		return;
+		return sendError(c, 'VALIDATION_FAILED', parsed.error.message);
 	}
 
 	try {
@@ -189,7 +177,7 @@ app.put('/entries/:id', async (req: Request, res: Response) => {
 			.limit(1);
 
 		if (!existingEntry) {
-			throw new AppError('NOT_FOUND', 'Entry not found');
+			return sendError(c, 'NOT_FOUND', 'Entry not found');
 		}
 
 		await db
@@ -197,25 +185,20 @@ app.put('/entries/:id', async (req: Request, res: Response) => {
 			.set(parsed.data)
 			.where(and(eq(entries.id, id), eq(entries.userId, userId)));
 
-		res.json({
-			message: 'Entry updated successfully',
-		});
-	} catch (err) {
-		if (err instanceof AppError) {
-			throw err;
-		}
-		throw new AppError('SERVER_ERROR', 'Failed to update entry');
+		return c.json({ message: 'Entry updated successfully' });
+	} catch {
+		return sendError(c, 'SERVER_ERROR', 'Failed to update entry');
 	}
 });
 
-app.delete('/entries/:id', async (req: Request, res: Response) => {
-	const session = await checkAuth(req, res);
-	if (!session) return;
-	const userId = session.user.id;
-	const id = parseInt(req.params.id);
+app.delete('/entries/:id', async (c) => {
+	const authed = await requireSession(c);
+	if ('error' in authed) return authed.error;
+	const userId = authed.session.user.id;
+
+	const id = Number.parseInt(c.req.param('id'), 10);
 	if (Number.isNaN(id)) {
-		sendError(res, 'VALIDATION_FAILED', 'Invalid entry ID');
-		return;
+		return sendError(c, 'VALIDATION_FAILED', 'Invalid entry ID');
 	}
 
 	try {
@@ -226,16 +209,16 @@ app.delete('/entries/:id', async (req: Request, res: Response) => {
 			.limit(1);
 
 		if (!existingEntry) {
-			throw new AppError('NOT_FOUND', 'Entry not found');
+			return sendError(c, 'NOT_FOUND', 'Entry not found');
 		}
 
 		await db
 			.delete(entries)
 			.where(and(eq(entries.id, id), eq(entries.userId, userId)));
 
-		res.status(204).send();
+		return c.body(null, 204);
 	} catch {
-		sendError(res, 'SERVER_ERROR', 'Failed to delete entry');
+		return sendError(c, 'SERVER_ERROR', 'Failed to delete entry');
 	}
 });
 
@@ -341,46 +324,26 @@ const searchTMDB = async (query: string) => {
 		return new AppError('SERVER_ERROR', 'Failed to search TMDB');
 	}
 };
-const queryParamsSchema = z.object({
-	query: z.string(),
-});
-const validateSearchParams = (schema: z.ZodTypeAny) => {
-	return (req: Request, res: Response, next: NextFunction) => {
-		try {
-			schema.parse(req.query);
-			next();
-		} catch (error) {
-			if (error instanceof z.ZodError) {
-				res.status(400).json({
-					message: 'Invalid query parameters',
-					errors: z.treeifyError(error),
-				});
-			} else {
-				next(error);
-			}
-		}
-	};
-};
 
-app.get(
-	'/moviedb/search',
-	validateSearchParams(queryParamsSchema),
-	async (req: Request, res: Response) => {
-		if (!moviedb) return sendError(res, 'SERVER_ERROR');
-		const { query } = req.query;
-		if (!query)
-			return sendError(res, 'VALIDATION_FAILED', 'query parameter is required');
-		const searchResult = await searchTMDB(query as string);
-		if (searchResult instanceof AppError)
-			return sendError(res, searchResult.errorKey, searchResult.message);
-		res.json(searchResult);
-	},
-);
+app.get('/moviedb/search', async (c) => {
+	if (!moviedb) return sendError(c, 'SERVER_ERROR');
 
-// 404 handler
-app.use((req: Request, res: Response) => {
-	sendError(res, 'NOT_FOUND', `Route ${req.originalUrl} not found`);
+	const parsed = z.object({ query: z.string() }).safeParse({
+		query: c.req.query('query'),
+	});
+	if (!parsed.success) {
+		return sendError(c, 'VALIDATION_FAILED', 'Invalid query parameters');
+	}
+
+	const searchResult = await searchTMDB(parsed.data.query);
+	if (searchResult instanceof AppError) {
+		return sendError(c, searchResult.errorKey, searchResult.message);
+	}
+	return c.json(searchResult);
 });
-app.listen(PORT, () =>
-	console.log(`Server running on port ${PORT}: http://localhost:${PORT}`),
-);
+
+app.notFound((c) => sendError(c, 'NOT_FOUND', `Route ${c.req.path} not found`));
+
+app.get('/health', (c) => c.json({ status: 'healthy' }));
+
+export default app;

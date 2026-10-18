@@ -1,4 +1,5 @@
-import type { Response } from 'express';
+import type { Context } from 'hono';
+import type { ContentfulStatusCode } from 'hono/utils/http-status';
 
 // Error Keys System
 export const ERROR_KEYS = {
@@ -48,11 +49,11 @@ export class AppError extends Error {
 }
 
 export const sendError = (
-	res: Response,
+	c: Context,
 	errorKey: keyof typeof ERROR_KEYS,
 	customMessage?: string,
 	details?: { [key: string]: unknown },
-): void => {
+): Response => {
 	const statusCode = ERROR_STATUS_CODES[errorKey];
 	const message = customMessage || ERROR_MESSAGES[errorKey];
 
@@ -64,5 +65,5 @@ export const sendError = (
 		...(details && { details }),
 	};
 
-	res.status(statusCode).json(errorResponse);
+	return c.json(errorResponse, statusCode as ContentfulStatusCode);
 };

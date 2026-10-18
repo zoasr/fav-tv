@@ -97,7 +97,9 @@ app.get('/entries', async (req: Request, res: Response) => {
 	const session = await checkAuth(req, res);
 	if (!session) return;
 	const userId = session.user.id;
-	const cursor = parseInt(req.query.cursor as string) || Date.now();
+	// ponytail: int4 max — Postgres binds this param as `integer` (column type),
+	// so a Date.now() sentinel overflows. serial ids can't exceed it anyway.
+	const cursor = parseInt(req.query.cursor as string) || 2_147_483_647;
 	const limit = 20;
 
 	try {

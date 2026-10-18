@@ -1,7 +1,7 @@
-import { mysqlTable, serial, varchar } from 'drizzle-orm/mysql-core';
+import { pgTable, serial, varchar } from 'drizzle-orm/pg-core';
 import { user } from './auth-schema';
 
-export const entries = mysqlTable('entries', {
+export const entries = pgTable('entries', {
 	id: serial('id').primaryKey(),
 	title: varchar('title', { length: 255 }).notNull(),
 	type: varchar('type', { length: 32 }).notNull(), // 'Movie' or 'TV Show'

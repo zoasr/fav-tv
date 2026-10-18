@@ -1,13 +1,12 @@
 import {
 	boolean,
-	int,
-	mysqlTable,
+	pgTable,
 	text,
 	timestamp,
 	varchar,
-} from 'drizzle-orm/mysql-core';
+} from 'drizzle-orm/pg-core';
 
-export const user = mysqlTable('user', {
+export const user = pgTable('user', {
 	id: varchar('id', { length: 36 }).primaryKey(),
 	name: text('name').notNull(),
 	email: varchar('email', { length: 255 }).notNull().unique(),
@@ -23,7 +22,7 @@ export const user = mysqlTable('user', {
 		.notNull(),
 });
 
-export const session = mysqlTable('session', {
+export const session = pgTable('session', {
 	id: varchar('id', { length: 36 }).primaryKey(),
 	expiresAt: timestamp('expires_at').notNull(),
 	token: varchar('token', { length: 255 }).notNull().unique(),
@@ -36,7 +35,7 @@ export const session = mysqlTable('session', {
 		.references(() => user.id, { onDelete: 'cascade' }),
 });
 
-export const account = mysqlTable('account', {
+export const account = pgTable('account', {
 	id: varchar('id', { length: 36 }).primaryKey(),
 	accountId: text('account_id').notNull(),
 	providerId: text('provider_id').notNull(),
@@ -54,7 +53,7 @@ export const account = mysqlTable('account', {
 	updatedAt: timestamp('updated_at').notNull(),
 });
 
-export const verification = mysqlTable('verification', {
+export const verification = pgTable('verification', {
 	id: varchar('id', { length: 36 }).primaryKey(),
 	identifier: text('identifier').notNull(),
 	value: text('value').notNull(),

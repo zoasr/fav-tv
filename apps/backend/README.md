@@ -7,7 +7,7 @@ A RESTful API built with Express.js, TypeScript, and Drizzle ORM for managing fa
 - **Runtime**: Node.js 18+
 - **Framework**: Express.js
 - **Language**: TypeScript
-- **Database**: MySQL with Drizzle ORM
+- **Database**: PostgreSQL (Neon) with Drizzle ORM
 - **Movie Database**: The Movie Database (TMDB)
 - **Authentication**: better-auth (cookie-based sessions)
 - **Validation**: Zod schemas
@@ -19,7 +19,7 @@ A RESTful API built with Express.js, TypeScript, and Drizzle ORM for managing fa
 
 - Node.js 18+ installed
 - pnpm package manager
-- MySQL database instance
+- PostgreSQL database instance (a free Neon project works)
 
 ### 1. Environment Setup
 
@@ -29,9 +29,13 @@ Create `.env` file in the backend directory:
 BETTER_AUTH_SECRET="your-32-character-secret-key-here"
 BETTER_AUTH_URL="http://localhost:3241"
 TMDB_API_KEY="your-tmdb-api-key-here"
-DATABASE_URL="mysql://user:password@host:port/database"
+DATABASE_URL="postgresql://user:password@ep-xxx.us-east-2.aws.neon.tech/dbname?sslmode=require"
+DATABASE_URL_POOLED="postgresql://user:password@ep-xxx-pooler.us-east-2.aws.neon.tech/dbname?sslmode=require"
 PORT=3241
 ```
+
+`DATABASE_URL` is the direct connection (used by migrations, which need transactions).
+`DATABASE_URL_POOLED` is the PgBouncer endpoint used by the running app, and is optional.
 
 ### 2. Install Dependencies
 
@@ -316,7 +320,7 @@ pnpm auth:migrate
 - `BETTER_AUTH_SECRET`: 32-character secret for auth encryption
 - `BETTER_AUTH_URL`: Base URL where auth endpoints are accessible
 - `TMDB_API_KEY`: Your API key for The Movie Database (TMDB).
-- `DATABASE_URL`: MySQL connection string
+- `DATABASE_URL`: Neon PostgreSQL connection string
 - `PORT`: Server port (default: 3241)
 
 ##### Getting a TMDB API Key
@@ -393,15 +397,16 @@ git push origin main
     - Start Command: `npm run start`
 
 4. **Add Database**
-    - In Railway dashboard: Add MySQL database
-    - Note the connection details
+    - The database is hosted on [Neon](https://neon.tech) (free tier)
+    - Copy the pooled or direct connection string from the Neon dashboard
 
 5. **Environment Variables**
 
 ```env
 BETTER_AUTH_SECRET=your-production-secret-32-chars
 BETTER_AUTH_URL=https://your-backend.railway.app
-DATABASE_URL=${{MySQL.DATABASE_URL}}
+DATABASE_URL=postgresql://user:password@ep-xxx.us-east-2.aws.neon.tech/dbname?sslmode=require
+DATABASE_URL_POOLED=postgresql://user:password@ep-xxx-pooler.us-east-2.aws.neon.tech/dbname?sslmode=require
 PORT=${{PORT}}
 NODE_ENV=production
 ```
@@ -474,7 +479,7 @@ Error: connect ECONNREFUSED
 ```
 
 - Check `DATABASE_URL` format
-- Verify MySQL service is running
+- Verify the Neon project is not suspended (free tier auto-suspends after idle)
 - Ensure network connectivity to database
 
 #### Authentication Errors

@@ -21,7 +21,7 @@ A full-stack web application to manage a personal list of favorite movies and TV
 - **Authentication**: [better-auth](https://github.com/better-auth/better-auth)
 
 ### Database & Infrastructure
-- **Database**: MySQL (hosted on Railway)
+- **Database**: PostgreSQL (hosted on Neon)
 - **Package Manager**: pnpm
 - **Monorepo**: Turborepo for workspace management
 - **Code Quality**: Biome for linting and formatting
@@ -31,7 +31,7 @@ A full-stack web application to manage a personal list of favorite movies and TV
 ### Prerequisites
 - Node.js 18+ installed
 - pnpm package manager
-- MySQL database (we'll use Railway)
+- PostgreSQL database (we'll use Neon)
 
 ### 1. Clone the Repository
 ```bash
@@ -44,11 +44,10 @@ cd favorite-tv
 pnpm install
 ```
 
-### 3. Database Setup (Railway)
-1. Visit [Railway](https://railway.app) and create a new project
-2. Add a MySQL database service to your project
-3. Copy the connection string from the MySQL service
-4. Create environment files (see Environment Configuration below)
+### 3. Database Setup (Neon)
+1. Visit [Neon](https://neon.tech) and create a free project
+2. Copy the connection string from the Neon dashboard (keep `sslmode=require`)
+3. Create environment files (see Environment Configuration below)
 
 ### 4. Environment Configuration
 
@@ -59,9 +58,13 @@ BETTER_AUTH_SECRET="your-32-character-secret-key-here"
 BETTER_AUTH_URL="http://localhost:3241"
 TMDB_ACCESS_TOKEN="[YOUR_ACCESS_TOKEN]"
 TMDB_API_KEY="[YOUR_API_KEY]"
-DATABASE_URL="mysql://user:password@host:port/database"
+DATABASE_URL="postgresql://user:password@ep-xxx.us-east-2.aws.neon.tech/dbname?sslmode=require"
+DATABASE_URL_POOLED="postgresql://user:password@ep-xxx-pooler.us-east-2.aws.neon.tech/dbname?sslmode=require"
 PORT=3241
 ```
+
+`DATABASE_URL` is the direct connection (used by migrations, which need transactions).
+`DATABASE_URL_POOLED` is the PgBouncer endpoint used by the running app, and is optional.
 
 #### Frontend Environment Variables
 Create `apps/frontend/.env`:
@@ -188,7 +191,7 @@ favorite-tv/
 This application is designed to be deployed with:
 - **Frontend**: Vercel (recommended) or Netlify
 - **Backend**: Railway (recommended) or any Node.js hosting
-- **Database**: Railway MySQL or any MySQL-compatible service
+- **Database**: Neon PostgreSQL or any Postgres-compatible service
 
 ### Backend Deployment (Railway)
 
@@ -200,8 +203,7 @@ This application is designed to be deployed with:
 
 #### Step 2: Configure Backend Service
 1. In Railway dashboard, you'll see your project
-2. Click "+ New" → "Database" → "MySQL" to add a database
-3. Click "+ New" → "GitHub Repo" → Select your repo again for the backend service
+2. Click "+ New" → "GitHub Repo" → Select your repo for the backend service
 4. In the backend service settings:
    - **Root Directory**: `apps/backend`
    - **Build Command**: `pnpm install && pnpm build`
@@ -213,7 +215,8 @@ In Railway backend service, add these environment variables:
 ```env
 BETTER_AUTH_SECRET=your-super-secret-32-character-key-here
 BETTER_AUTH_URL=https://your-backend-url.railway.app
-DATABASE_URL=${{MySQL.DATABASE_URL}}  # Railway auto-fills this
+DATABASE_URL=postgresql://user:password@ep-xxx.us-east-2.aws.neon.tech/dbname?sslmode=require  # direct, from Neon
+DATABASE_URL_POOLED=postgresql://user:password@ep-xxx-pooler.us-east-2.aws.neon.tech/dbname?sslmode=require  # pooled, from Neon
 PORT=${{PORT}}  # Railway auto-fills this
 ```
 
@@ -287,8 +290,11 @@ BETTER_AUTH_SECRET="use-openssl-rand-hex-32-to-generate"
 # Your production backend URL
 BETTER_AUTH_URL="https://your-backend.railway.app"
 
-# Railway provides this automatically
-DATABASE_URL="mysql://user:pass@host:port/db"
+# Neon direct connection (used by migrations)
+DATABASE_URL="postgresql://user:pass@ep-xxx.us-east-2.aws.neon.tech/db?sslmode=require"
+
+# Neon pooled connection (used by the app; optional)
+DATABASE_URL_POOLED="postgresql://user:pass@ep-xxx-pooler.us-east-2.aws.neon.tech/db?sslmode=require"
 
 # Railway provides this automatically
 PORT="3000"
@@ -313,9 +319,9 @@ VITE_API_BASE_URL="https://your-backend.railway.app"
 - Verify build command is correct: `pnpm install && pnpm build`
 
 **Database Connection Issues**
-- Verify `DATABASE_URL` is correctly set to `${{MySQL.DATABASE_URL}}`
+- Verify `DATABASE_URL` matches the Neon connection string (keep `sslmode=require`)
 - Ensure database migrations have been run
-- Check MySQL service is running in Railway
+- Check the Neon project is not suspended (free tier auto-suspends after idle)
 
 **Frontend Build Fails**
 - Ensure `VITE_API_BASE_URL` points to deployed backend
